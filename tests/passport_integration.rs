@@ -1,5 +1,3 @@
-
-
 use a1::{
     DyoloIdentity, DyoloPassport, Intent, NarrowingMatrix, SystemClock,
 };
@@ -81,7 +79,13 @@ fn passport_guard_rejects_out_of_scope_intent() {
     let clock = SystemClock;
 
     let sub = passport
-        .issue_sub(agent.verifying_key(), &["portfolio.read"], 3600, &root, &clock)
+        .issue_sub(
+            agent.verifying_key(),
+            &["portfolio.read"],
+            3600,
+            &root,
+            &clock,
+        )
         .unwrap();
 
     let mut chain = passport.new_chain().unwrap();
