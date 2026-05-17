@@ -825,7 +825,8 @@ mod passport_tests {
     #[test]
     fn narrowing_matrix_from_csv() {
         let csv = NarrowingMatrix::from_csv("trade.equity , portfolio.read, audit.read");
-        let slice = NarrowingMatrix::from_capabilities(&["trade.equity", "portfolio.read", "audit.read"]);
+        let slice =
+            NarrowingMatrix::from_capabilities(&["trade.equity", "portfolio.read", "audit.read"]);
         assert_eq!(csv, slice);
     }
 
@@ -842,7 +843,9 @@ mod passport_tests {
         chain.push(sub);
 
         let intent = Intent::new("trade.equity").unwrap();
-        let receipt = passport.guard_local(&chain, &agent.verifying_key(), &intent).unwrap();
+        let receipt = passport
+            .guard_local(&chain, &agent.verifying_key(), &intent)
+            .unwrap();
 
         assert!(receipt.verify_commitment());
         let mask = NarrowingMatrix::from_hex(&receipt.capability_mask_hex).unwrap();
