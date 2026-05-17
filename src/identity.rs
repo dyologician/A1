@@ -277,7 +277,7 @@ impl VaultSigner {
     }
 }
 
-#[cfg(feature = "async")]
+#[cfg(all(feature = "async", feature = "wire"))]
 #[async_trait::async_trait]
 impl AsyncSigner for VaultSigner {
     fn verifying_key(&self) -> VerifyingKey {

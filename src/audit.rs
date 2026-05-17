@@ -424,7 +424,10 @@ impl SiemHttpAuditSink {
         batch: &mut Vec<AuditEvent>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use tokio::io::AsyncWriteExt;
+        #[cfg(feature = "wire")]
         let body = serde_json::to_string(batch).unwrap_or_default();
+        #[cfg(not(feature = "wire"))]
+        let body = String::new();
         let url: url::Url = endpoint.parse()?;
         let host = url.host_str().unwrap_or("localhost").to_string();
         let port = url.port_or_known_default().unwrap_or(80);
