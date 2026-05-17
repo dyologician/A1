@@ -73,6 +73,15 @@ func (c *Client) AuthorizePassport(
 
 	var raw json.RawMessage
 	if err := c.post(ctx, "/v1/passport/authorize", payload, &raw); err != nil {
+		// Convert A1Error (HTTP denial) to PassportError so callers get a
+		// consistent error type from all passport-level operations.
+		if a1err, ok := err.(*A1Error); ok {
+			return nil, &PassportError{
+				Message:   a1err.Message,
+				ErrorCode: a1err.ErrorCode,
+				Status:    a1err.Status,
+			}
+		}
 		return nil, err
 	}
 
@@ -135,16 +144,7 @@ func WithA1Passport[T any, R any](
 			}
 		}
 
-			if _, err := client.AuthorizePassport(ctx, chain, opts.Capability, executorPK, nil); err != nil {
-			// Wrap A1Error (HTTP-level denial) into PassportError for a consistent
-			// error type from WithA1Passport regardless of failure source.
-			if a1err, ok := err.(*A1Error); ok {
-				return zero, &PassportError{
-					Message:   a1err.Message,
-					ErrorCode: a1err.ErrorCode,
-					Status:    a1err.Status,
-				}
-			}
+		if _, err := client.AuthorizePassport(ctx, chain, opts.Capability, executorPK, nil); err != nil {
 			return zero, err
 		}
 
