@@ -6,21 +6,38 @@
 
 ## Fastest install (one command)
 
-Mac or Linux — paste this into your terminal:
+**Mac / Linux** — paste this into your terminal:
 
 ```bash
-curl -fsSL https://github.com/dyologician/a1/releases/latest/download/install.sh | sh
+git clone https://github.com/dyologician/A1
+cd A1
+./setup.sh
 ```
 
-Then:
+That's it. A1 generates secure keys automatically, starts everything, and opens Studio in your browser.
+
+**Windows** — open PowerShell and run:
+
+```powershell
+git clone https://github.com/dyologician/A1
+cd A1
+.\setup.bat
+```
+
+Or just double-click `setup.bat` after cloning.
+
+> **You need Docker Desktop installed first** — [get it here (free)](https://docs.docker.com/get-docker/). If you don't have it, `setup.sh` will install it for you automatically on Mac and Linux.
+
+---
+
+## To start A1 again later
 
 ```bash
-a1 start
+./setup.sh          # Mac / Linux
+.\setup.bat         # Windows
 ```
 
-That opens A1 Studio in your browser automatically.
-
-**Windows** — double-click `setup.bat`, or run `setup.ps1` in PowerShell.
+That's it — same command every time. If A1 is already running it just opens the browser.
 
 ---
 
@@ -70,23 +87,22 @@ You do NOT need:
 
 ## Step 1 — Start A1
 
-**If you installed with the curl command above:**
+**Mac / Linux:**
 ```bash
-a1 start
+./setup.sh
 ```
 
-**If you downloaded the zip:**
-```bash
-./setup.sh        # Mac / Linux (terminal)
+**Windows:**
 ```
-```
-setup.bat         # Windows (double-click, no terminal needed)
-```
-```powershell
-.\setup.ps1      # Windows (PowerShell)
+setup.bat    ← double-click this, no terminal needed
 ```
 
-A1 downloads a pre-built binary automatically (no Docker needed) and opens Studio in your browser. Auto-start and a desktop launcher are configured silently.
+A1 automatically:
+- Generates your secure signing keys (first run only)
+- Starts the gateway, database, and cache
+- Opens Studio in your browser
+- Sets up auto-start so A1 runs after every login
+- Creates a desktop launcher for next time
 
 ---
 
@@ -243,10 +259,19 @@ The passport expires after 30 days. After that, the agent cannot authorize any a
 ## For developers: quick reference
 
 ```bash
-# Start gateway (developer)
-# First run compiles Rust — takes 3–10 min. Subsequent starts are instant.
-docker compose -f docker/docker-compose.yml up -d
-# or: ./setup.sh
+# Clone and start (first time)
+git clone https://github.com/dyologician/A1
+cd A1
+./setup.sh       # auto-generates .env, starts Docker, opens browser
+
+# Start again later
+./setup.sh
+
+# Stop
+./setup.sh stop
+
+# Status
+./setup.sh status
 
 # Generate keypair
 a1 keygen --out key.json
