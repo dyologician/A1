@@ -29,6 +29,9 @@ A1 closes this gap. It gives every agent in every delegation chain an unforgeabl
 
 ## Pages in this wiki
 
+### 👋 New here? Start here
+- [**A1 Easy Guide — For AI Agent Users**](A1-Easy-Guide) — Download, run, stop, and restart A1. Step by step, no prior knowledge needed.
+
 ### Getting started
 - [Quickstart Guide](Quickstart) — From zero to a guarded agent in 5 minutes
 - [Passport Guide](Passport-Guide) — Full passport lifecycle and delegation patterns
