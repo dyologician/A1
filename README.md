@@ -2,9 +2,9 @@
 
 **Cryptographic chain-of-custody for recursive AI agent delegation.**
 
-[![Crates.io](https://img.shields.io/crates/v/a1.svg)](https://crates.io/crates/a1)
-[![npm](https://img.shields.io/npm/v/a1.svg)](https://www.npmjs.com/package/a1)
-[![PyPI](https://img.shields.io/pypi/v/a1.svg)](https://pypi.org/project/a1/)
+[![Crates.io](https://img.shields.io/crates/v/a1-ai.svg)](https://crates.io/crates/a1-ai)
+[![npm](https://img.shields.io/npm/v/a1-ai.svg)](https://www.npmjs.com/package/a1-ai)
+[![PyPI](https://img.shields.io/pypi/v/a1-ai.svg)](https://pypi.org/project/a1-ai/)
 [![Go Reference](https://img.shields.io/badge/go-reference-blue)](https://pkg.go.dev/github.com/dyologician/a1/sdk/go/a1/kya)
 [![CI](https://github.com/dyologician/a1/actions/workflows/ci.yml/badge.svg)](https://github.com/dyologician/a1/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
@@ -44,19 +44,19 @@ Every action executed by any agent in any delegation tree carries an irrefutable
 ```toml
 # Cargo.toml
 [dependencies]
-a1 = { version = "2.8", features = ["full"] }
+a1-ai = { version = "2.8", features = ["full"] }
 ```
 
 **Python**
 
 ```bash
-pip install a1
+pip install a1-ai
 ```
 
 **TypeScript / Node.js**
 
 ```bash
-npm install a1
+npm install a1-ai
 ```
 
 **Go**
@@ -184,7 +184,7 @@ A1 ships a built-in [Model Context Protocol](https://spec.modelcontextprotocol.i
 ```json
 {
   "mcpServers": {
-    "a1": {
+    "a1-ai": {
       "url": "http://localhost:8080/mcp"
     }
   }
@@ -403,7 +403,7 @@ const members = await swarm.listMembers(swarmId);
 ### TypeScript middleware utilities
 
 ```typescript
-import { A1Middleware, exchangeJwt, verifyWebhookSignature } from "a1";
+import { A1Middleware, exchangeJwt, verifyWebhookSignature } from "a1-ai";
 
 // Express middleware — protect all routes
 app.use(A1Middleware({ client, capability: "api.write" }));
@@ -711,7 +711,7 @@ async def execute_trade(symbol: str, qty: int) -> dict:
     return await broker.place_order(symbol, qty)
 ```
 
-Install the optional dependency: `pip install "a1[siem-otel]"`. All spans use the `dyolo.a1.*` attribute namespace. If `opentelemetry-sdk` is absent, the module silently degrades to a no-op so the rest of your code compiles unchanged.
+Install the optional dependency: `pip install "a1-ai[siem-otel]"`. All spans use the `dyolo.a1.*` attribute namespace. If `opentelemetry-sdk` is absent, the module silently degrades to a no-op so the rest of your code compiles unchanged.
 
 ### Namespace isolation (multi-tenant)
 

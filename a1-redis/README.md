@@ -1,6 +1,6 @@
 # A1-redis
 
-Production Redis storage backends for [a1](https://crates.io/crates/a1).
+Production Redis storage backends for [a1](https://crates.io/crates/a1-ai).
 
 Provides `RedisRevocationStore` and `RedisNonceStore` that implement the
 `AsyncRevocationStore` and `AsyncNonceStore` traits using a `deadpool-redis`
