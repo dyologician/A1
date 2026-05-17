@@ -23,8 +23,7 @@ pub struct AiStatusResponse {
 pub async fn status_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     let key = std::env::var("A1_AI_KEY").unwrap_or_default();
     let available = key.starts_with("sk-ant-");
-    let model = std::env::var("A1_AI_MODEL")
-        .unwrap_or_else(|_| "claude-sonnet-4-20250514".into());
+    let model = std::env::var("A1_AI_MODEL").unwrap_or_else(|_| "claude-sonnet-4-20250514".into());
     Json(AiStatusResponse {
         available,
         model: if available { model } else { String::new() },
@@ -68,8 +67,7 @@ pub async fn chat_handler(
         ).into_response(),
     };
 
-    let model = std::env::var("A1_AI_MODEL")
-        .unwrap_or_else(|_| "claude-sonnet-4-20250514".into());
+    let model = std::env::var("A1_AI_MODEL").unwrap_or_else(|_| "claude-sonnet-4-20250514".into());
 
     let mut body = serde_json::json!({
         "model": model,
