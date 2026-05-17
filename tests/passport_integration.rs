@@ -1,6 +1,4 @@
-use a1::{
-    DyoloIdentity, DyoloPassport, Intent, NarrowingMatrix, SystemClock,
-};
+use a1::{DyoloIdentity, DyoloPassport, Intent, NarrowingMatrix, SystemClock};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
