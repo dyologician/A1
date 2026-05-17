@@ -34,10 +34,9 @@ async fn inject_protocol_header(
     next: Next,
 ) -> Response {
     let mut response = next.run(request).await;
-    response.headers_mut().insert(
-        "X-A1-Protocol",
-        HeaderValue::from_static("dyolo_v2.8.0"),
-    );
+    response
+        .headers_mut()
+        .insert("X-A1-Protocol", HeaderValue::from_static("dyolo_v2.8.0"));
     response
 }
 
@@ -86,98 +85,190 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let admin_routes = Router::new()
-        .route("/v1/cert/issue",              post(routes::cert::issue_handler))
-        .route("/v1/cert/issue-batch",        post(routes::cert::issue_batch_handler))
-        .route("/v1/vc/issue",                post(routes::did::issue_vc_handler))
-        .route("/v1/swarm/create",            post(routes::swarm::create_handler))
-        .route("/v1/swarm/member/add",        post(routes::swarm::add_member_handler))
-        .route("/v1/swarm/member/remove",     post(routes::swarm::remove_member_handler))
-        .route("/v1/governance/audit-report", post(routes::governance::audit_report_handler))
-        .route("/v1/webhook/test",            post(routes::webhook::test_handler))
-        .route("/v1/jwt/exchange",            post(routes::jwt_bridge::exchange_handler))
+        .route("/v1/cert/issue", post(routes::cert::issue_handler))
+        .route(
+            "/v1/cert/issue-batch",
+            post(routes::cert::issue_batch_handler),
+        )
+        .route("/v1/vc/issue", post(routes::did::issue_vc_handler))
+        .route("/v1/swarm/create", post(routes::swarm::create_handler))
+        .route(
+            "/v1/swarm/member/add",
+            post(routes::swarm::add_member_handler),
+        )
+        .route(
+            "/v1/swarm/member/remove",
+            post(routes::swarm::remove_member_handler),
+        )
+        .route(
+            "/v1/governance/audit-report",
+            post(routes::governance::audit_report_handler),
+        )
+        .route("/v1/webhook/test", post(routes::webhook::test_handler))
+        .route(
+            "/v1/jwt/exchange",
+            post(routes::jwt_bridge::exchange_handler),
+        )
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));
 
     let public_routes = Router::new()
         // Health — both spellings accepted (scripts use /healthz)
-        .route("/health",  get(routes::health::handler))
+        .route("/health", get(routes::health::handler))
         .route("/healthz", get(routes::health::handler))
         // Studio UI
-        .route("/studio",  get(routes::studio::handler))
+        .route("/studio", get(routes::studio::handler))
         .route("/studio/", get(routes::studio::handler))
         // Well-known discovery
-        .route("/.well-known/a1-configuration", get(routes::wellknown::handler))
+        .route(
+            "/.well-known/a1-configuration",
+            get(routes::wellknown::handler),
+        )
         // Core authorization
-        .route("/v1/authorize",          post(routes::authorize::handler))
-        .route("/v1/authorize/batch",    post(routes::batch::handler))
+        .route("/v1/authorize", post(routes::authorize::handler))
+        .route("/v1/authorize/batch", post(routes::batch::handler))
         .route("/v1/passport/authorize", post(routes::passport::handler))
         // Studio lightweight policy check (no signed chain needed — for A1 Studio proof panel)
-        .route("/v1/studio/check",       post(routes::governance::studio_check_handler))
+        .route(
+            "/v1/studio/check",
+            post(routes::governance::studio_check_handler),
+        )
         // Certificate lifecycle
-        .route("/v1/cert/revoke",        post(routes::cert::revoke_handler))
-        .route("/v1/cert/revoke-batch",  post(routes::cert::revoke_batch_handler))
-        .route("/v1/cert/:fp",           get(routes::cert::inspect_handler))
+        .route("/v1/cert/revoke", post(routes::cert::revoke_handler))
+        .route(
+            "/v1/cert/revoke-batch",
+            post(routes::cert::revoke_batch_handler),
+        )
+        .route("/v1/cert/:fp", get(routes::cert::inspect_handler))
         // Token verification
         .route("/v1/token/verify", post(routes::chain::verify_handler))
         // DID / Verifiable Credentials
-        .route("/v1/did/gateway",  get(routes::did::gateway_did_handler))
-        .route("/v1/did/:pk_hex",  get(routes::did::resolve_handler))
-        .route("/v1/vc/verify",    post(routes::did::verify_vc_handler))
+        .route("/v1/did/gateway", get(routes::did::gateway_did_handler))
+        .route("/v1/did/:pk_hex", get(routes::did::resolve_handler))
+        .route("/v1/vc/verify", post(routes::did::verify_vc_handler))
         // Anchor & negotiate
-        .route("/v1/anchor",    post(routes::anchor::handler))
+        .route("/v1/anchor", post(routes::anchor::handler))
         .route("/v1/negotiate", post(routes::negotiate::handler))
         // Swarm (read-only public)
-        .route("/v1/swarm/:swarm_id/members", get(routes::swarm::list_members_handler))
+        .route(
+            "/v1/swarm/:swarm_id/members",
+            get(routes::swarm::list_members_handler),
+        )
         // Governance (read-only public)
-        .route("/v1/governance/policy",          get(routes::governance::policy_handler))
-        .route("/v1/governance/approval/verify", post(routes::governance::verify_approval_handler))
+        .route(
+            "/v1/governance/policy",
+            get(routes::governance::policy_handler),
+        )
+        .route(
+            "/v1/governance/approval/verify",
+            post(routes::governance::verify_approval_handler),
+        )
         // AI proxy — local LLM relay
         .route("/v1/ai/status", get(routes::ai_proxy::status_handler))
-        .route("/v1/ai/chat",   post(routes::ai_proxy::chat_handler))
+        .route("/v1/ai/chat", post(routes::ai_proxy::chat_handler))
         // MCP — zero-code agent integration
-        .route("/mcp",       get(routes::mcp::sse_handler).post(routes::mcp::post_handler))
+        .route(
+            "/mcp",
+            get(routes::mcp::sse_handler).post(routes::mcp::post_handler),
+        )
         .route("/mcp/tools", get(routes::mcp::tools_handler))
         // Agent auto-connect
-        .route("/v1/agents/scan",       get(routes::agent_connect::scan_handler))
-        .route("/v1/agents/connect",    post(routes::agent_connect::connect_handler))
-        .route("/v1/agents/restart",    post(routes::agent_connect::restart_handler))
+        .route("/v1/agents/scan", get(routes::agent_connect::scan_handler))
+        .route(
+            "/v1/agents/connect",
+            post(routes::agent_connect::connect_handler),
+        )
+        .route(
+            "/v1/agents/restart",
+            post(routes::agent_connect::restart_handler),
+        )
         // Agent pull/install (SSE streaming) and remove (uninstall)
-        .route("/v1/agents/pull",       get(routes::agent_connect::pull_handler))
-        .route("/v1/agents/remove",     post(routes::agent_connect::remove_handler))
+        .route("/v1/agents/pull", get(routes::agent_connect::pull_handler))
+        .route(
+            "/v1/agents/remove",
+            post(routes::agent_connect::remove_handler),
+        )
         // Live connection proof — reads real config, runs binary, tests A1 policy
-        .route("/v1/agents/probe-live", post(routes::agent_connect::probe_live_handler))
+        .route(
+            "/v1/agents/probe-live",
+            post(routes::agent_connect::probe_live_handler),
+        )
         // Agent relay — Direct Connect tab
-        .route("/v1/agents/probe",             post(routes::agent_relay::probe_handler))
-        .route("/v1/agents/relay",             post(routes::agent_relay::relay_handler))
-        .route("/v1/agents/integration-check", get(routes::agent_relay::integration_check_handler))
+        .route("/v1/agents/probe", post(routes::agent_relay::probe_handler))
+        .route("/v1/agents/relay", post(routes::agent_relay::relay_handler))
+        .route(
+            "/v1/agents/integration-check",
+            get(routes::agent_relay::integration_check_handler),
+        )
         // AI Integration — read/write agent source files
-        .route("/v1/agents/read-file",  post(routes::agent_patch::read_file_handler))
-        .route("/v1/agents/write-file", post(routes::agent_patch::write_file_handler))
-        .route("/v1/agents/list-files", get(routes::agent_patch::list_files_handler))
+        .route(
+            "/v1/agents/read-file",
+            post(routes::agent_patch::read_file_handler),
+        )
+        .route(
+            "/v1/agents/write-file",
+            post(routes::agent_patch::write_file_handler),
+        )
+        .route(
+            "/v1/agents/list-files",
+            get(routes::agent_patch::list_files_handler),
+        )
         // Passport lifecycle
-        .route("/v1/passports/issue",               post(routes::passports::issue_passport_handler))
-        .route("/v1/passports/list",                get(routes::passports::list_passports_handler))
-        .route("/v1/passports/renew",               post(routes::passports::renew_passport_handler))
-        .route("/v1/passports/read",                get(routes::passports::read_passport_handler))
-        .route("/v1/passports/restore",             post(routes::passports::restore_passports_handler))
-        .route("/v1/passports/revoke-by-namespace", post(routes::passports::revoke_by_namespace_handler))
+        .route(
+            "/v1/passports/issue",
+            post(routes::passports::issue_passport_handler),
+        )
+        .route(
+            "/v1/passports/list",
+            get(routes::passports::list_passports_handler),
+        )
+        .route(
+            "/v1/passports/renew",
+            post(routes::passports::renew_passport_handler),
+        )
+        .route(
+            "/v1/passports/read",
+            get(routes::passports::read_passport_handler),
+        )
+        .route(
+            "/v1/passports/restore",
+            post(routes::passports::restore_passports_handler),
+        )
+        .route(
+            "/v1/passports/revoke-by-namespace",
+            post(routes::passports::revoke_by_namespace_handler),
+        )
         // System — autostart daemon
-        .route("/v1/system/autostart",
+        .route(
+            "/v1/system/autostart",
             post(routes::passports::install_autostart_handler)
-            .delete(routes::passports::remove_autostart_handler))
+                .delete(routes::passports::remove_autostart_handler),
+        )
         // System — status (autostart state, docker presence, platform)
         .route("/v1/system/status", get(routes::automagic::get_status))
         // System — graceful shutdown (Studio Stop button)
         .route("/v1/system/shutdown", post(system_shutdown_handler))
         // Agents — disconnect (remove A1 from agent config)
-        .route("/v1/agents/disconnect", post(routes::agent_connect::disconnect_handler))
+        .route(
+            "/v1/agents/disconnect",
+            post(routes::agent_connect::disconnect_handler),
+        )
         // System — trigger Docker Desktop installation
-        .route("/v1/system/install-docker", post(routes::automagic::install_docker))
+        .route(
+            "/v1/system/install-docker",
+            post(routes::automagic::install_docker),
+        )
         // System — gitignore protection
-        .route("/v1/system/gitignore-add", post(routes::passports::gitignore_add_handler))
+        .route(
+            "/v1/system/gitignore-add",
+            post(routes::passports::gitignore_add_handler),
+        )
         // Debug — plain-English error explanations
-        .route("/v1/debug/explain-error", post(routes::passports::explain_error_handler))
+        .route(
+            "/v1/debug/explain-error",
+            post(routes::passports::explain_error_handler),
+        )
         // Tenant — multi-tenant context and config
-        .route("/v1/tenant/info",   get(routes::tenant::info_handler))
+        .route("/v1/tenant/info", get(routes::tenant::info_handler))
         .route("/v1/tenant/config", get(routes::tenant::config_handler))
         // Webhook — status (URL redacted for security)
         .route("/v1/webhook/status", get(routes::webhook::status_handler));
@@ -186,16 +277,19 @@ async fn main() -> anyhow::Result<()> {
         .as_deref()
         .unwrap_or("")
     {
-        "x-forwarded-for"  => SecureClientIpSource::RightmostXForwardedFor,
-        "fly-client-ip"    => SecureClientIpSource::FlyClientIp,
+        "x-forwarded-for" => SecureClientIpSource::RightmostXForwardedFor,
+        "fly-client-ip" => SecureClientIpSource::FlyClientIp,
         "cf-connecting-ip" => SecureClientIpSource::CfConnectingIp,
-        _                  => SecureClientIpSource::ConnectInfo,
+        _ => SecureClientIpSource::ConnectInfo,
     };
 
     let app = Router::new()
         .merge(admin_routes)
         .merge(public_routes)
-        .layer(middleware::from_fn_with_state(state.clone(), per_ip_rate_limit))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            per_ip_rate_limit,
+        ))
         .layer(middleware::from_fn(inject_protocol_header))
         .layer(ip_source.into_extension())
         .layer(TraceLayer::new_for_http())
@@ -230,14 +324,15 @@ async fn system_shutdown_handler() -> impl axum::response::IntoResponse {
         {
             // Send SIGTERM to ourselves — triggers the graceful_shutdown listener.
             let pid = std::process::id();
-            unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM); }
+            unsafe {
+                libc::kill(pid as libc::pid_t, libc::SIGTERM);
+            }
         }
         #[cfg(not(unix))]
         std::process::exit(0);
     });
     axum::Json(serde_json::json!({"ok": true, "message": "Shutting down A1 gateway"}))
 }
-
 
 async fn shutdown_signal() {
     let ctrl_c = async {

@@ -33,9 +33,9 @@ impl AppState {
             Ok(hex_str) => {
                 let bytes = hex::decode(&hex_str)
                     .map_err(|_| anyhow::anyhow!("A1_SIGNING_KEY_HEX must be valid hex"))?;
-                let arr: [u8; 32] = bytes
-                    .try_into()
-                    .map_err(|_| anyhow::anyhow!("A1_SIGNING_KEY_HEX must be exactly 32 bytes (64 hex chars)"))?;
+                let arr: [u8; 32] = bytes.try_into().map_err(|_| {
+                    anyhow::anyhow!("A1_SIGNING_KEY_HEX must be exactly 32 bytes (64 hex chars)")
+                })?;
                 if arr == [0u8; 32] {
                     anyhow::bail!(
                         "A1_SIGNING_KEY_HEX cannot be all zeros — \
@@ -67,7 +67,8 @@ impl AppState {
                 );
                 let mut base = [0u8; 32];
                 rand::RngCore::fill_bytes(&mut rand::rngs::OsRng, &mut base);
-                let mut h = blake3::Hasher::new_derive_key("a1::64796f6c6f::mac::ephemeral::v2.8.0");
+                let mut h =
+                    blake3::Hasher::new_derive_key("a1::64796f6c6f::mac::ephemeral::v2.8.0");
                 h.update(&base);
                 h.finalize().into()
             }
@@ -124,15 +125,15 @@ impl AppState {
             .unwrap_or(500);
         let rps = NonZeroU32::new(rps.max(1)).unwrap();
 
-        let rate_limiter = Arc::new(
-            RateLimiter::<IpAddr, DefaultKeyedStateStore<IpAddr>, DefaultClock>::keyed(
-                Quota::per_second(rps),
-            ),
-        );
+        let rate_limiter = Arc::new(RateLimiter::<
+            IpAddr,
+            DefaultKeyedStateStore<IpAddr>,
+            DefaultClock,
+        >::keyed(Quota::per_second(rps)));
 
         let gateway_pk_hex = hex::encode(signing_identity.verifying_key().as_bytes());
 
-        let webhook_url    = std::env::var("A1_WEBHOOK_URL").ok();
+        let webhook_url = std::env::var("A1_WEBHOOK_URL").ok();
         let webhook_secret = std::env::var("A1_WEBHOOK_SECRET").ok();
 
         if webhook_url.is_some() {

@@ -217,7 +217,12 @@ impl AsyncSigner for DyoloIdentity {
 #[async_trait::async_trait]
 pub trait KmsHttpClient: Send + Sync {
     /// Post a payload to the KMS endpoint and return the raw response bytes.
-    async fn post(&self, url: &str, headers: &[(&str, &str)], body: &[u8]) -> Result<Vec<u8>, crate::error::A1Error>;
+    async fn post(
+        &self,
+        url: &str,
+        headers: &[(&str, &str)],
+        body: &[u8],
+    ) -> Result<Vec<u8>, crate::error::A1Error>;
 }
 
 /// Production-ready HashiCorp Vault Transit backend for A1 Passports.
@@ -256,8 +261,11 @@ impl VaultSigner {
         let pk_bytes = hex::decode(public_key_hex)
             .map_err(|_| crate::error::A1Error::WireFormatError("invalid hex".into()))?;
         let public_key = VerifyingKey::from_bytes(
-            &pk_bytes.try_into().map_err(|_| crate::error::A1Error::WireFormatError("must be 32 bytes".into()))?
-        ).map_err(|_| crate::error::A1Error::WireFormatError("invalid ed25519 key".into()))?;
+            &pk_bytes
+                .try_into()
+                .map_err(|_| crate::error::A1Error::WireFormatError("must be 32 bytes".into()))?,
+        )
+        .map_err(|_| crate::error::A1Error::WireFormatError("invalid ed25519 key".into()))?;
 
         Ok(Self {
             vault_addr,
@@ -280,34 +288,42 @@ impl AsyncSigner for VaultSigner {
         // Vault expects base64 encoded input for the transit engine
         use base64::{engine::general_purpose, Engine as _};
         let encoded_input = general_purpose::STANDARD.encode(msg);
-        
-        // Structure the Vault Transit API request. 
+
+        // Structure the Vault Transit API request.
         // The context parameter cryptographically binds the operation to the enforcer domain
         // and persistently records the invocation marker in enterprise Vault audit logs.
-        let payload = format!("{{\"input\": \"{}\", \"context\": \"ZHlvbG9fdjIuOC4w\"}}", encoded_input);
+        let payload = format!(
+            "{{\"input\": \"{}\", \"context\": \"ZHlvbG9fdjIuOC4w\"}}",
+            encoded_input
+        );
         let url = format!("{}/v1/transit/sign/{}", self.vault_addr, self.key_name);
         let headers = [
             ("X-Vault-Token", self.token.as_str()),
             ("Content-Type", "application/json"),
         ];
 
-        let resp_bytes = self.http_client.post(&url, &headers, payload.as_bytes())
+        let resp_bytes = self
+            .http_client
+            .post(&url, &headers, payload.as_bytes())
             .await
             .expect("vault KMS post failed");
 
-        let resp_json: serde_json::Value = serde_json::from_slice(&resp_bytes)
-            .expect("vault returned invalid JSON");
+        let resp_json: serde_json::Value =
+            serde_json::from_slice(&resp_bytes).expect("vault returned invalid JSON");
 
         let sig_b64 = resp_json["data"]["signature"]
             .as_str()
             .expect("vault response missing data.signature")
             .trim_start_matches("vault:v1:");
 
-        let sig_bytes = general_purpose::STANDARD.decode(sig_b64)
+        let sig_bytes = general_purpose::STANDARD
+            .decode(sig_b64)
             .expect("vault signature base64 decode failed");
 
         Signature::from_bytes(
-            &sig_bytes.try_into().expect("vault signature must be 64 bytes")
+            &sig_bytes
+                .try_into()
+                .expect("vault signature must be 64 bytes"),
         )
     }
 }

@@ -68,17 +68,15 @@ pub async fn handler(
     Json(req): Json<AuthorizeRequest>,
 ) -> impl IntoResponse {
     use a1::Clock;
-    let request_id  = req.request_id.clone();
+    let request_id = req.request_id.clone();
     let intent_name = req.intent_name.clone();
-    let clock       = a1::SystemClock;
-    let now         = clock.unix_now();
+    let clock = a1::SystemClock;
+    let now = clock.unix_now();
 
     match authorize_inner(&state, req).await {
         Ok(resp) => {
             // intent_hex: Blake3 of the intent name for SIEM correlation
-            let intent_hex = hex::encode(
-                blake3::hash(intent_name.as_bytes()).as_bytes()
-            );
+            let intent_hex = hex::encode(blake3::hash(intent_name.as_bytes()).as_bytes());
             crate::routes::webhook::dispatch(
                 crate::routes::webhook::WebhookEvent::from_authorization(
                     true,

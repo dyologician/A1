@@ -17,7 +17,6 @@
 ///
 /// cargo:rerun-if-changed directives watch every source file individually so
 /// Cargo only re-runs this script when something actually changed.
-
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -25,8 +24,7 @@ fn main() {
     // Use CARGO_MANIFEST_DIR (the directory containing this Cargo.toml, i.e.
     // a1-gateway/) for robust path resolution regardless of working directory.
     let manifest_dir = PathBuf::from(
-        std::env::var("CARGO_MANIFEST_DIR")
-            .expect("CARGO_MANIFEST_DIR must be set by Cargo"),
+        std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR must be set by Cargo"),
     );
 
     // a1-gateway/ is one level inside the workspace root
@@ -35,7 +33,7 @@ fn main() {
         .expect("a1-gateway must be inside a workspace");
 
     let studio_src = workspace_root.join("studio").join("src");
-    let out_path   = workspace_root.join("studio").join("index.html");
+    let out_path = workspace_root.join("studio").join("index.html");
 
     // Always re-run if this build script itself changes
     println!("cargo:rerun-if-changed=build.rs");
@@ -79,7 +77,11 @@ fn main() {
     println!("cargo:rerun-if-changed={}", js_app.display());
 
     let mut js = String::new();
-    for path in js_root.iter().chain(js_comps.iter()).chain(std::iter::once(&js_app)) {
+    for path in js_root
+        .iter()
+        .chain(js_comps.iter())
+        .chain(std::iter::once(&js_app))
+    {
         js.push_str(
             &fs::read_to_string(path)
                 .unwrap_or_else(|e| panic!("Cannot read {}: {e}", path.display())),

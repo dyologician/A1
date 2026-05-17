@@ -129,7 +129,9 @@ fn issue_vc_inner(state: &AppState, req: IssueVcRequest) -> anyhow::Result<Issue
     let chain_fp: [u8; 32] = match &req.chain_fingerprint_hex {
         Some(hex_str) => {
             let bytes = hex::decode(hex_str)?;
-            bytes.try_into().map_err(|_| anyhow::anyhow!("chain fingerprint must be 32 bytes"))?
+            bytes
+                .try_into()
+                .map_err(|_| anyhow::anyhow!("chain fingerprint must be 32 bytes"))?
         }
         None => [0u8; 32],
     };
@@ -181,9 +183,7 @@ pub struct VerifyVcResponse {
 ///
 /// Verify a W3C Verifiable Credential's Ed25519 signature. Returns the
 /// decoded subject claims on success.
-pub async fn verify_vc_handler(
-    Json(req): Json<VerifyVcRequest>,
-) -> impl IntoResponse {
+pub async fn verify_vc_handler(Json(req): Json<VerifyVcRequest>) -> impl IntoResponse {
     match req.credential.verify() {
         Ok(()) => {
             let subject = &req.credential.credential_subject;

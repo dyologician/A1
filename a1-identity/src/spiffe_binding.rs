@@ -4,8 +4,8 @@
 //! that an Ed25519 key used for a1 delegation chains is cryptographically
 //! bound to their verified SPIFFE identity (URI SAN).
 
-use blake3::Hasher;
 use a1::Signer;
+use blake3::Hasher;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
 

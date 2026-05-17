@@ -150,9 +150,7 @@ pub enum A1Error {
     #[error("post-quantum signature component is missing for algorithm {0}")]
     PqSignatureMissing(&'static str),
 
-    #[error(
-        "invalid hybrid key length for {algorithm}: expected {expected} bytes, found {found}"
-    )]
+    #[error("invalid hybrid key length for {algorithm}: expected {expected} bytes, found {found}")]
     InvalidHybridKeyLength {
         algorithm: &'static str,
         expected: usize,

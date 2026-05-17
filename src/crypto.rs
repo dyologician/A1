@@ -91,13 +91,13 @@ pub(crate) fn merkle_node(left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
 pub trait KmsSigner: Send + Sync {
     /// Returns the 32-byte Ed25519 (or mapped equivalent) public key.
     fn public_key(&self) -> [u8; 32];
-    
+
     /// Asynchronously signs the given payload using the secure enclave/KMS.
     async fn sign(&self, payload: &[u8]) -> Result<[u8; 64], crate::error::A1Error>;
-    
+
     /// Returns the key identifier (e.g., AWS ARN, Vault path) for provenance tracking.
     fn key_id(&self) -> &str;
-    
+
     /// Returns the provenance tag for this KMS instance.
     fn provenance_tag(&self) -> &str {
         "64796f6c6f"

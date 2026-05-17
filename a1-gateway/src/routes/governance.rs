@@ -1,7 +1,7 @@
-use std::sync::Arc;
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use a1::governance::{GovernancePolicy, AuditReport, ApprovalToken};
 use crate::state::AppState;
+use a1::governance::{ApprovalToken, AuditReport, GovernancePolicy};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use std::sync::Arc;
 
 // ─── Tools that A1 always blocks (deny-list) ─────────────────────────────────
 const BLOCKED_TOOLS: &[&str] = &[
@@ -29,16 +29,16 @@ const APPROVAL_TOOLS: &[&str] = &[
 #[derive(serde::Deserialize)]
 pub struct StudioCheckRequest {
     pub agent_id: Option<String>,
-    pub tool:     String,
-    pub context:  Option<serde_json::Value>,
+    pub tool: String,
+    pub context: Option<serde_json::Value>,
 }
 
 #[derive(serde::Serialize)]
 pub struct StudioCheckResponse {
     pub authorized: bool,
-    pub decision:   String,
-    pub reason:     String,
-    pub tool:       String,
+    pub decision: String,
+    pub reason: String,
+    pub tool: String,
 }
 
 pub async fn studio_check_handler(Json(req): Json<StudioCheckRequest>) -> impl IntoResponse {
@@ -59,24 +59,26 @@ pub async fn studio_check_handler(Json(req): Json<StudioCheckRequest>) -> impl I
     if APPROVAL_TOOLS.iter().any(|&t| t == tool.as_str()) {
         return Json(StudioCheckResponse {
             authorized: false,
-            decision:   "require_approval".into(),
-            reason:     format!(
+            decision: "require_approval".into(),
+            reason: format!(
                 "A1 policy: '{}' requires a human approval token before the agent may proceed.",
                 tool
             ),
             tool: req.tool,
-        }).into_response();
+        })
+        .into_response();
     }
 
     Json(StudioCheckResponse {
         authorized: true,
-        decision:   "allow".into(),
-        reason:     format!(
+        decision: "allow".into(),
+        reason: format!(
             "A1 policy: '{}' is permitted. Gateway authorized — forwarding to agent.",
             tool
         ),
         tool: req.tool,
-    }).into_response()
+    })
+    .into_response()
 }
 
 pub async fn policy_handler(State(state): State<Arc<AppState>>) -> impl IntoResponse {
@@ -98,13 +100,32 @@ pub struct AuditReportRequest {
 }
 
 pub async fn audit_report_handler(Json(req): Json<AuditReportRequest>) -> impl IntoResponse {
-    let policy = GovernancePolicy::from_env().unwrap_or_default().unwrap_or_default();
-    match AuditReport::new(&req.scope, req.period_start_unix, req.period_end_unix, &policy) {
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e.to_string() }))).into_response(),
+    let policy = GovernancePolicy::from_env()
+        .unwrap_or_default()
+        .unwrap_or_default();
+    match AuditReport::new(
+        &req.scope,
+        req.period_start_unix,
+        req.period_end_unix,
+        &policy,
+    ) {
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": e.to_string() })),
+            )
+                .into_response()
+        }
         Ok(mut report) => {
-            if let Some(v) = req.total_authorizations { report.total_authorizations = v; }
-            if let Some(v) = req.denied_authorizations { report.denied_authorizations = v; }
-            if let Some(v) = req.revocations_issued { report.revocations_issued = v; }
+            if let Some(v) = req.total_authorizations {
+                report.total_authorizations = v;
+            }
+            if let Some(v) = req.denied_authorizations {
+                report.denied_authorizations = v;
+            }
+            if let Some(v) = req.revocations_issued {
+                report.revocations_issued = v;
+            }
             let _ = report.finalize();
             (StatusCode::OK, Json(serde_json::to_value(report).unwrap())).into_response()
         }
@@ -117,7 +138,10 @@ pub struct VerifyApprovalRequest {
 }
 
 pub async fn verify_approval_handler(Json(req): Json<VerifyApprovalRequest>) -> impl IntoResponse {
-    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
     match req.token.verify(now) {
         Ok(()) => (StatusCode::OK, Json(serde_json::json!({ "valid": true, "capability": req.token.capability, "agent_did": req.token.agent_did }))).into_response(),
         Err(e) => (StatusCode::OK, Json(serde_json::json!({ "valid": false, "error": e.to_string() }))).into_response(),

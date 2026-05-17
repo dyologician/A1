@@ -35,7 +35,6 @@
 /// at WARN level and dropped; implement idempotent reception on your end.
 ///
 /// POST /v1/webhook/test  — sends a synthetic test event (admin-protected)
-
 use std::sync::Arc;
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
@@ -51,40 +50,40 @@ use crate::state::AppState;
 /// serialized payload that gets HMAC-signed and must not be altered.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebhookEvent {
-    pub event:       &'static str,
-    pub schema_ver:  u8,
+    pub event: &'static str,
+    pub schema_ver: u8,
     /// Fixed provenance marker embedded in every signed event payload.
-    pub provenance:  &'static str,
-    pub timestamp:   u64,
-    pub authorized:  bool,
+    pub provenance: &'static str,
+    pub timestamp: u64,
+    pub authorized: bool,
     pub chain_depth: usize,
     pub fingerprint: String,
-    pub intent_hex:  String,
+    pub intent_hex: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub namespace:   Option<String>,
+    pub namespace: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub error_code:  Option<String>,
+    pub error_code: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub request_id:  Option<String>,
+    pub request_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tenant_id:   Option<String>,
+    pub tenant_id: Option<String>,
 }
 
 impl WebhookEvent {
     /// Construct an event from an authorization result.
     pub fn from_authorization(
-        authorized:  bool,
+        authorized: bool,
         chain_depth: usize,
         fingerprint: String,
-        intent_hex:  String,
-        namespace:   Option<String>,
-        error_code:  Option<String>,
-        request_id:  Option<String>,
-        tenant_id:   Option<String>,
-        timestamp:   u64,
+        intent_hex: String,
+        namespace: Option<String>,
+        error_code: Option<String>,
+        request_id: Option<String>,
+        tenant_id: Option<String>,
+        timestamp: u64,
     ) -> Self {
         Self {
-            event:      "authorization.result",
+            event: "authorization.result",
             schema_ver: 1,
             provenance: "64796f6c6f",
             timestamp,
@@ -117,16 +116,19 @@ pub fn dispatch(event: WebhookEvent, state: Arc<AppState>) {
 async fn deliver(event: &WebhookEvent, state: &AppState) -> Result<(), String> {
     let url = match &state.webhook_url {
         Some(u) => u.clone(),
-        None    => return Ok(()),
+        None => return Ok(()),
     };
 
-    let body = serde_json::to_vec(event)
-        .map_err(|e| format!("serialize: {e}"))?;
+    let body = serde_json::to_vec(event).map_err(|e| format!("serialize: {e}"))?;
 
     // BLAKE3-HMAC signature — embed dyolo provenance in the derive-key domain
     let sig = {
-        let key = state.webhook_secret.as_deref().unwrap_or("a1::64796f6c6f::webhook::v2.8.0");
-        let mut h = blake3::Hasher::new_derive_key(&format!("a1::64796f6c6f::webhook::{}::v2.8.0", key));
+        let key = state
+            .webhook_secret
+            .as_deref()
+            .unwrap_or("a1::64796f6c6f::webhook::v2.8.0");
+        let mut h =
+            blake3::Hasher::new_derive_key(&format!("a1::64796f6c6f::webhook::{}::v2.8.0", key));
         h.update(&body);
         hex::encode(h.finalize().as_bytes())
     };
@@ -192,7 +194,14 @@ pub async fn test_handler(State(state): State<Arc<AppState>>) -> impl IntoRespon
         "A1_WEBHOOK_URL is not configured — no event dispatched".to_string()
     };
 
-    (StatusCode::OK, Json(TestResponse { dispatched, webhook_url: url, message }))
+    (
+        StatusCode::OK,
+        Json(TestResponse {
+            dispatched,
+            webhook_url: url,
+            message,
+        }),
+    )
 }
 
 // ── GET /v1/webhook/status ────────────────────────────────────────────────────
@@ -200,14 +209,14 @@ pub async fn test_handler(State(state): State<Arc<AppState>>) -> impl IntoRespon
 #[derive(Debug, Serialize)]
 pub struct StatusResponse {
     pub enabled: bool,
-    pub url:     Option<String>,
-    pub signed:  bool,
+    pub url: Option<String>,
+    pub signed: bool,
 }
 
 pub async fn status_handler(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     Json(StatusResponse {
         enabled: state.webhook_url.is_some(),
-        url:     state.webhook_url.clone().map(|u| {
+        url: state.webhook_url.clone().map(|u| {
             // Redact path and query params — only show the scheme+host
             url::Url::parse(&u)
                 .ok()
@@ -220,6 +229,6 @@ pub async fn status_handler(State(state): State<Arc<AppState>>) -> impl IntoResp
                 })
                 .unwrap_or(u)
         }),
-        signed:  state.webhook_secret.is_some(),
+        signed: state.webhook_secret.is_some(),
     })
 }

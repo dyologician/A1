@@ -13,8 +13,8 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use axum::response::sse::{Event, KeepAlive, Sse};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -33,10 +33,10 @@ pub struct KnownAgent {
     pub icon: &'static str,
     pub connect_method: &'static str, // "mcp_json" | "config_toml" | "skill_file"
     pub homepage: &'static str,
-    pub install_cmd_unix: &'static str,   // command to install on Mac/Linux
-    pub install_cmd_win:  &'static str,   // command to install on Windows
-    pub uninstall_cmd:    &'static str,   // command to remove
-    pub recommended:      bool,
+    pub install_cmd_unix: &'static str, // command to install on Mac/Linux
+    pub install_cmd_win: &'static str,  // command to install on Windows
+    pub uninstall_cmd: &'static str,    // command to remove
+    pub recommended: bool,
 }
 
 const KNOWN_AGENTS: &[KnownAgent] = &[
@@ -163,8 +163,8 @@ pub struct DetectedAgent {
     pub connect_method: String,
     pub install_path: Option<String>,
     pub connected: bool,
-    pub config_file: Option<String>,  // the file A1 wrote/would write
-    pub connect_hint: String,          // human-readable what the connect action does
+    pub config_file: Option<String>, // the file A1 wrote/would write
+    pub connect_hint: String,        // human-readable what the connect action does
     pub install_cmd_unix: String,
     pub install_cmd_win: String,
     pub uninstall_cmd: String,
@@ -209,7 +209,9 @@ fn find_ironclaw(checked: &mut Vec<String>) -> Option<PathBuf> {
     ];
     for p in candidates {
         let s = p.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         if p.is_dir() {
             return Some(p);
         }
@@ -217,7 +219,9 @@ fn find_ironclaw(checked: &mut Vec<String>) -> Option<PathBuf> {
     if which_binary("ironclaw").is_some() {
         let fallback = home().join(".ironclaw");
         let s = fallback.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         std::fs::create_dir_all(&fallback).ok();
         return Some(fallback);
     }
@@ -233,7 +237,9 @@ fn find_openclaw(checked: &mut Vec<String>) -> Option<PathBuf> {
     ];
     for p in candidates {
         let s = p.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         if p.is_dir() {
             return Some(p);
         }
@@ -241,7 +247,9 @@ fn find_openclaw(checked: &mut Vec<String>) -> Option<PathBuf> {
     if which_binary("openclaw").is_some() {
         let fallback = home().join(".openclaw");
         let s = fallback.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         std::fs::create_dir_all(&fallback).ok();
         return Some(fallback);
     }
@@ -256,7 +264,9 @@ fn find_claude_code(checked: &mut Vec<String>) -> Option<PathBuf> {
     ];
     for p in candidates {
         let s = p.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         if p.is_dir() {
             return Some(p);
         }
@@ -264,7 +274,9 @@ fn find_claude_code(checked: &mut Vec<String>) -> Option<PathBuf> {
     if which_binary("claude").is_some() {
         let fallback = home().join(".claude");
         let s = fallback.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         std::fs::create_dir_all(&fallback).ok();
         return Some(fallback);
     }
@@ -273,13 +285,18 @@ fn find_claude_code(checked: &mut Vec<String>) -> Option<PathBuf> {
 
 fn find_claude_desktop(checked: &mut Vec<String>) -> Option<PathBuf> {
     let candidates = vec![
-        home().join("Library").join("Application Support").join("Claude"),
+        home()
+            .join("Library")
+            .join("Application Support")
+            .join("Claude"),
         home().join(".config").join("Claude"),
         home().join("AppData").join("Roaming").join("Claude"),
     ];
     for p in &candidates {
         let s = p.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         if p.is_dir() {
             return Some(p.clone());
         }
@@ -290,11 +307,16 @@ fn find_claude_desktop(checked: &mut Vec<String>) -> Option<PathBuf> {
 fn find_ollama(checked: &mut Vec<String>) -> Option<PathBuf> {
     let candidates = vec![
         home().join(".ollama"),
-        home().join("Library").join("Application Support").join("Ollama"),
+        home()
+            .join("Library")
+            .join("Application Support")
+            .join("Ollama"),
     ];
     for p in candidates {
         let s = p.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         if p.is_dir() {
             return Some(p);
         }
@@ -302,7 +324,9 @@ fn find_ollama(checked: &mut Vec<String>) -> Option<PathBuf> {
     if which_binary("ollama").is_some() {
         let fallback = home().join(".ollama");
         let s = fallback.display().to_string();
-        if !checked.contains(&s) { checked.push(s.clone()); }
+        if !checked.contains(&s) {
+            checked.push(s.clone());
+        }
         std::fs::create_dir_all(&fallback).ok();
         return Some(fallback);
     }
@@ -312,13 +336,20 @@ fn find_ollama(checked: &mut Vec<String>) -> Option<PathBuf> {
 fn find_python_agent(pkg: &str, checked: &mut Vec<String>) -> Option<PathBuf> {
     let probe_cmd = format!("python3 -c \"import {pkg}\" 2>/dev/null && echo ok");
     let s = format!("python3 -c import {pkg}");
-    if !checked.contains(&s) { checked.push(s.clone()); }
+    if !checked.contains(&s) {
+        checked.push(s.clone());
+    }
     let ok = std::process::Command::new("sh")
-        .arg("-c").arg(&probe_cmd)
+        .arg("-c")
+        .arg(&probe_cmd)
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).contains("ok"))
         .unwrap_or(false);
-    if ok { Some(std::env::current_dir().unwrap_or_else(|_| home())) } else { None }
+    if ok {
+        Some(std::env::current_dir().unwrap_or_else(|_| home()))
+    } else {
+        None
+    }
 }
 
 // ─── Is-connected check helpers ───────────────────────────────────────────────
@@ -347,9 +378,10 @@ fn mcp_connected(dir: &Path) -> (bool, Option<String>) {
 // ─── Config file templates ────────────────────────────────────────────────────
 
 fn mcp_json_content() -> String {
-    let base = std::env::var("A1_PUBLIC_BASE_URL")
-        .unwrap_or_else(|_| "http://localhost:8080".into());
-    format!(r#"{{
+    let base =
+        std::env::var("A1_PUBLIC_BASE_URL").unwrap_or_else(|_| "http://localhost:8080".into());
+    format!(
+        r#"{{
   "mcpServers": {{
     "a1": {{
       "type": "http",
@@ -357,13 +389,15 @@ fn mcp_json_content() -> String {
       "description": "A1 — cryptographic agent authorization"
     }}
   }}
-}}"#)
+}}"#
+    )
 }
 
 fn ironclaw_toml_content() -> String {
-    let base = std::env::var("A1_PUBLIC_BASE_URL")
-        .unwrap_or_else(|_| "http://localhost:8080".into());
-    format!(r#"# A1 Plugin for IronClaw
+    let base =
+        std::env::var("A1_PUBLIC_BASE_URL").unwrap_or_else(|_| "http://localhost:8080".into());
+    format!(
+        r#"# A1 Plugin for IronClaw
 # Generated by A1 Studio — do not edit manually.
 
 [plugin.a1]
@@ -384,19 +418,22 @@ deny = ["network.raw_socket", "process.kill_system", "registry.write"]
 [plugin.a1.audit]
 enabled   = true
 audit_log = "~/.ironclaw/a1-audit.jsonl"
-"#, base = base)
+"#,
+        base = base
+    )
 }
 
 // ─── GET /v1/agents/scan ─────────────────────────────────────────────────────
 
 pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     let mut checked = Vec::new();
-    let mut agents  = Vec::new();
+    let mut agents = Vec::new();
 
     // ── IronClaw — RECOMMENDED, always first ────────────────────────────────
     {
         let install_path = find_ironclaw(&mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| ironclaw_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
@@ -420,7 +457,8 @@ pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     // ── OpenClaw ─────────────────────────────────────────────────────────────
     {
         let install_path = find_openclaw(&mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| mcp_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
@@ -444,7 +482,8 @@ pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     // ── Claude Code ──────────────────────────────────────────────────────────
     {
         let install_path = find_claude_code(&mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| mcp_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
@@ -468,55 +507,59 @@ pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     // ── Claude Desktop ───────────────────────────────────────────────────────
     {
         let install_path = find_claude_desktop(&mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| mcp_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
-            id:               "claude_desktop".into(),
-            name:             "Claude Desktop".into(),
-            description:      "Anthropic's desktop AI assistant with MCP support.".into(),
-            icon:             "💬".into(),
-            homepage:         "https://claude.ai/desktop".into(),
-            connect_method:   "mcp_json".into(),
-            install_path:     install_path.map(|p| p.display().to_string()),
+            id: "claude_desktop".into(),
+            name: "Claude Desktop".into(),
+            description: "Anthropic's desktop AI assistant with MCP support.".into(),
+            icon: "💬".into(),
+            homepage: "https://claude.ai/desktop".into(),
+            connect_method: "mcp_json".into(),
+            install_path: install_path.map(|p| p.display().to_string()),
             connected,
             config_file,
-            connect_hint:     "Adds A1 to Claude Desktop's config".into(),
+            connect_hint: "Adds A1 to Claude Desktop's config".into(),
             install_cmd_unix: "".into(),
-            install_cmd_win:  "".into(),
-            uninstall_cmd:    "".into(),
-            recommended:      false,
+            install_cmd_win: "".into(),
+            uninstall_cmd: "".into(),
+            recommended: false,
         });
     }
 
     // ── Ollama (Local LLM) ───────────────────────────────────────────────────
     {
         let install_path = find_ollama(&mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| mcp_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
-            id:               "ollama".into(),
-            name:             "Ollama (Local LLM)".into(),
-            description:      "Run Llama 3, Mistral, Phi, Gemma locally. No API key, full privacy.".into(),
-            icon:             "🦙".into(),
-            homepage:         "https://ollama.ai".into(),
-            connect_method:   "mcp_json".into(),
-            install_path:     install_path.map(|p| p.display().to_string()),
+            id: "ollama".into(),
+            name: "Ollama (Local LLM)".into(),
+            description: "Run Llama 3, Mistral, Phi, Gemma locally. No API key, full privacy."
+                .into(),
+            icon: "🦙".into(),
+            homepage: "https://ollama.ai".into(),
+            connect_method: "mcp_json".into(),
+            install_path: install_path.map(|p| p.display().to_string()),
             connected,
             config_file,
-            connect_hint:     "Adds A1 as an MCP server for Ollama agents".into(),
+            connect_hint: "Adds A1 as an MCP server for Ollama agents".into(),
             install_cmd_unix: "curl -fsSL https://ollama.ai/install.sh | sh".into(),
-            install_cmd_win:  "winget install Ollama.Ollama".into(),
-            uninstall_cmd:    "which ollama && sudo rm $(which ollama) || true".into(),
-            recommended:      false,
+            install_cmd_win: "winget install Ollama.Ollama".into(),
+            uninstall_cmd: "which ollama && sudo rm $(which ollama) || true".into(),
+            recommended: false,
         });
     }
 
     // ── LangChain ────────────────────────────────────────────────────────────
     {
         let install_path = find_python_agent("langchain", &mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| mcp_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
@@ -540,31 +583,36 @@ pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     // ── CrewAI ───────────────────────────────────────────────────────────────
     {
         let install_path = find_python_agent("crewai", &mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| mcp_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
-            id:               "crewai".into(),
-            name:             "CrewAI".into(),
-            description:      "Multi-agent framework. Groups of AI agents working as a crew.".into(),
-            icon:             "⛵".into(),
-            homepage:         "https://crewai.com".into(),
-            connect_method:   "mcp_json".into(),
-            install_path:     install_path.map(|p| p.display().to_string()),
+            id: "crewai".into(),
+            name: "CrewAI".into(),
+            description: "Multi-agent framework. Groups of AI agents working as a crew.".into(),
+            icon: "⛵".into(),
+            homepage: "https://crewai.com".into(),
+            connect_method: "mcp_json".into(),
+            install_path: install_path.map(|p| p.display().to_string()),
             connected,
             config_file,
-            connect_hint:     "Adds A1 guard to your CrewAI project directory".into(),
-            install_cmd_unix: "pip3 install --user crewai 2>/dev/null || python3 -m pip install --user crewai".into(),
-            install_cmd_win:  "pip install crewai".into(),
-            uninstall_cmd:    "pip3 uninstall -y crewai 2>/dev/null || python3 -m pip uninstall -y crewai".into(),
-            recommended:      false,
+            connect_hint: "Adds A1 guard to your CrewAI project directory".into(),
+            install_cmd_unix:
+                "pip3 install --user crewai 2>/dev/null || python3 -m pip install --user crewai"
+                    .into(),
+            install_cmd_win: "pip install crewai".into(),
+            uninstall_cmd:
+                "pip3 uninstall -y crewai 2>/dev/null || python3 -m pip uninstall -y crewai".into(),
+            recommended: false,
         });
     }
 
     // ── OpenAI Agents ────────────────────────────────────────────────────────
     {
         let install_path = find_python_agent("openai", &mut checked);
-        let (connected, config_file) = install_path.as_ref()
+        let (connected, config_file) = install_path
+            .as_ref()
             .map(|p| mcp_connected(p))
             .unwrap_or((false, None));
         agents.push(DetectedAgent {
@@ -585,7 +633,10 @@ pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
         });
     }
 
-    Json(ScanResponse { agents, scan_paths_checked: checked })
+    Json(ScanResponse {
+        agents,
+        scan_paths_checked: checked,
+    })
 }
 
 // ─── POST /v1/agents/connect ──────────────────────────────────────────────────
@@ -599,11 +650,11 @@ pub struct ConnectRequest {
 
 #[derive(Debug, Serialize)]
 pub struct ConnectResponse {
-    pub connected:     bool,
-    pub agent_id:      String,
+    pub connected: bool,
+    pub agent_id: String,
     pub files_written: Vec<String>,
-    pub message:       String,
-    pub next_step:     String,
+    pub message: String,
+    pub next_step: String,
 }
 
 pub async fn connect_handler(
@@ -613,23 +664,26 @@ pub async fn connect_handler(
     let mut checked = Vec::new();
 
     // Resolve install path
-    let install_path: Option<PathBuf> = req.install_path.as_ref()
-        .map(PathBuf::from)
-        .or_else(|| match req.agent_id.as_str() {
-            "openclaw"     => find_openclaw(&mut checked),
-            "ironclaw"     => find_ironclaw(&mut checked),
-            "claude_code"  => find_claude_code(&mut checked),
-            "claude_desktop" => find_claude_desktop(&mut checked),
-            "ollama"       => find_ollama(&mut checked),
-            "langchain" | "crewai" | "openai_agents" | "custom" => {
-                Some(std::env::current_dir().unwrap_or_else(|_| home()))
-            }
-            _ => None,
-        });
+    let install_path: Option<PathBuf> =
+        req.install_path
+            .as_ref()
+            .map(PathBuf::from)
+            .or_else(|| match req.agent_id.as_str() {
+                "openclaw" => find_openclaw(&mut checked),
+                "ironclaw" => find_ironclaw(&mut checked),
+                "claude_code" => find_claude_code(&mut checked),
+                "claude_desktop" => find_claude_desktop(&mut checked),
+                "ollama" => find_ollama(&mut checked),
+                "langchain" | "crewai" | "openai_agents" | "custom" => {
+                    Some(std::env::current_dir().unwrap_or_else(|_| home()))
+                }
+                _ => None,
+            });
 
     match req.agent_id.as_str() {
         // ── MCP-based agents ──────────────────────────────────────────────────
-        "openclaw" | "claude_code" | "langchain" | "crewai" | "openai_agents" | "ollama" | "custom" => {
+        "openclaw" | "claude_code" | "langchain" | "crewai" | "openai_agents" | "ollama"
+        | "custom" => {
             let dir = match install_path {
                 Some(ref p) => p.clone(),
                 None => {
@@ -670,20 +724,25 @@ pub async fn connect_handler(
                         _ => "A1 is now connected. Restart your agent if it's running.",
                     };
                     Json(ConnectResponse {
-                        connected:     true,
-                        agent_id:      req.agent_id.clone(),
+                        connected: true,
+                        agent_id: req.agent_id.clone(),
                         files_written: vec![mcp_path.display().to_string()],
-                        message:       format!("✓ Connected. Wrote .mcp.json to {}", dir.display()),
-                        next_step:     next.into(),
-                    }).into_response()
+                        message: format!("✓ Connected. Wrote .mcp.json to {}", dir.display()),
+                        next_step: next.into(),
+                    })
+                    .into_response()
                 }
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(ConnectResponse {
-                    connected:     false,
-                    agent_id:      req.agent_id,
-                    files_written: vec![],
-                    message:       format!("Failed to write {}: {e}", mcp_path.display()),
-                    next_step:     "Check file permissions on the target directory.".into(),
-                })).into_response(),
+                Err(e) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ConnectResponse {
+                        connected: false,
+                        agent_id: req.agent_id,
+                        files_written: vec![],
+                        message: format!("Failed to write {}: {e}", mcp_path.display()),
+                        next_step: "Check file permissions on the target directory.".into(),
+                    }),
+                )
+                    .into_response(),
             }
         }
 
@@ -703,19 +762,25 @@ pub async fn connect_handler(
 
             match std::fs::write(&toml_path, &content) {
                 Ok(_) => Json(ConnectResponse {
-                    connected:     true,
-                    agent_id:      req.agent_id,
+                    connected: true,
+                    agent_id: req.agent_id,
                     files_written: vec![toml_path.display().to_string()],
-                    message:       format!("✓ Connected. Wrote a1_plugin.toml to {}", dir.display()),
-                    next_step:     "Restart IronClaw. A1 will enforce authorization on all tool calls.".into(),
-                }).into_response(),
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(ConnectResponse {
-                    connected:     false,
-                    agent_id:      req.agent_id,
-                    files_written: vec![],
-                    message:       format!("Failed to write {}: {e}", toml_path.display()),
-                    next_step:     "Check file permissions on the target directory.".into(),
-                })).into_response(),
+                    message: format!("✓ Connected. Wrote a1_plugin.toml to {}", dir.display()),
+                    next_step: "Restart IronClaw. A1 will enforce authorization on all tool calls."
+                        .into(),
+                })
+                .into_response(),
+                Err(e) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ConnectResponse {
+                        connected: false,
+                        agent_id: req.agent_id,
+                        files_written: vec![],
+                        message: format!("Failed to write {}: {e}", toml_path.display()),
+                        next_step: "Check file permissions on the target directory.".into(),
+                    }),
+                )
+                    .into_response(),
             }
         }
 
@@ -726,9 +791,16 @@ pub async fn connect_handler(
                 None => {
                     let fallback = {
                         #[cfg(target_os = "macos")]
-                        { home().join("Library").join("Application Support").join("Claude") }
+                        {
+                            home()
+                                .join("Library")
+                                .join("Application Support")
+                                .join("Claude")
+                        }
                         #[cfg(not(target_os = "macos"))]
-                        { home().join(".config").join("Claude") }
+                        {
+                            home().join(".config").join("Claude")
+                        }
                     };
                     std::fs::create_dir_all(&fallback).ok();
                     fallback
@@ -764,21 +836,27 @@ pub async fn connect_handler(
             }
         }
 
-        unknown => (StatusCode::BAD_REQUEST, Json(ConnectResponse {
-            connected:     false,
-            agent_id:      unknown.into(),
-            files_written: vec![],
-            message:       format!("Unknown agent ID: '{unknown}'. Call /v1/agents/scan for valid IDs."),
-            next_step:     "".into(),
-        })).into_response(),
+        unknown => (
+            StatusCode::BAD_REQUEST,
+            Json(ConnectResponse {
+                connected: false,
+                agent_id: unknown.into(),
+                files_written: vec![],
+                message: format!(
+                    "Unknown agent ID: '{unknown}'. Call /v1/agents/scan for valid IDs."
+                ),
+                next_step: "".into(),
+            }),
+        )
+            .into_response(),
     }
 }
 
 // ─── JSON merge helpers ──────────────────────────────────────────────────────
 
 fn merge_mcp_json(existing: &str) -> Option<String> {
-    let base = std::env::var("A1_PUBLIC_BASE_URL")
-        .unwrap_or_else(|_| "http://localhost:8080".into());
+    let base =
+        std::env::var("A1_PUBLIC_BASE_URL").unwrap_or_else(|_| "http://localhost:8080".into());
     let a1_entry = format!(
         r#""a1": {{"type": "http", "url": "{base}/mcp", "description": "A1 — cryptographic agent authorization"}}"#
     );
@@ -801,15 +879,15 @@ fn merge_desktop_config(existing: &str) -> Option<String> {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct RestartRequest {
-    pub agent_id:    String,
+    pub agent_id: String,
     pub install_path: Option<String>,
 }
 
 #[derive(Debug, serde::Serialize)]
 pub struct RestartResponse {
-    pub success:     bool,
-    pub agent_id:    String,
-    pub message:     String,
+    pub success: bool,
+    pub agent_id: String,
+    pub message: String,
     pub restart_cmd: Option<String>,
 }
 
@@ -820,48 +898,59 @@ pub async fn restart_handler(
     let id = req.agent_id.trim().to_lowercase();
 
     let cmd: Option<&str> = match id.as_str() {
-        "openclaw"    => Some("openclaw restart"),
-        "ironclaw"    => Some("ironclaw restart"),
+        "openclaw" => Some("openclaw restart"),
+        "ironclaw" => Some("ironclaw restart"),
         "claude-code" => Some("claude restart"),
-        _             => None,
+        _ => None,
     };
 
     if let Some(c) = cmd {
         let output = tokio::process::Command::new("sh")
-            .arg("-c").arg(c)
-            .output().await;
+            .arg("-c")
+            .arg(c)
+            .output()
+            .await;
         let ok = output.map(|o| o.status.success()).unwrap_or(false);
         return Json(RestartResponse {
-            success:     ok,
-            agent_id:    req.agent_id.clone(),
-            message:     if ok { format!("Restarted {id}") } else { format!("Could not restart {id} automatically") },
+            success: ok,
+            agent_id: req.agent_id.clone(),
+            message: if ok {
+                format!("Restarted {id}")
+            } else {
+                format!("Could not restart {id} automatically")
+            },
             restart_cmd: Some(c.into()),
-        }).into_response();
+        })
+        .into_response();
     }
 
     Json(RestartResponse {
-        success:     false,
-        agent_id:    req.agent_id.clone(),
-        message:     "Restart not supported automatically for this agent. Use the command below.".into(),
-        restart_cmd: req.install_path.as_deref()
+        success: false,
+        agent_id: req.agent_id.clone(),
+        message: "Restart not supported automatically for this agent. Use the command below."
+            .into(),
+        restart_cmd: req
+            .install_path
+            .as_deref()
             .map(|p| format!("cd {p} && kill $(pgrep -f agent) && python agent.py"))
             .or_else(|| Some("Restart your agent manually or from its launcher".into())),
-    }).into_response()
+    })
+    .into_response()
 }
 
 // ─── POST /v1/agents/disconnect ───────────────────────────────────────────────
 
 #[derive(Debug, serde::Deserialize)]
 pub struct DisconnectRequest {
-    pub agent_id:    String,
+    pub agent_id: String,
     pub install_path: Option<String>,
 }
 
 #[derive(Debug, serde::Serialize)]
 pub struct DisconnectResponse {
-    pub success:  bool,
+    pub success: bool,
     pub agent_id: String,
-    pub message:  String,
+    pub message: String,
 }
 
 pub async fn disconnect_handler(
@@ -872,7 +961,8 @@ pub async fn disconnect_handler(
 
     // ── IronClaw — TOML plugin file ───────────────────────────────────────────
     if id == "ironclaw" {
-        let ironclaw_dir = req.install_path
+        let ironclaw_dir = req
+            .install_path
             .as_deref()
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| home().join(".ironclaw"));
@@ -881,33 +971,43 @@ pub async fn disconnect_handler(
 
         if !toml_path.exists() {
             return axum::Json(DisconnectResponse {
-                success:  true,
+                success: true,
                 agent_id: id,
-                message:  "No a1_plugin.toml found — IronClaw was already disconnected.".into(),
-            }).into_response();
+                message: "No a1_plugin.toml found — IronClaw was already disconnected.".into(),
+            })
+            .into_response();
         }
 
         return match std::fs::remove_file(&toml_path) {
             Ok(_) => axum::Json(DisconnectResponse {
-                success:  true,
+                success: true,
                 agent_id: id,
-                message:  format!("A1 plugin removed from {}. Restart IronClaw to apply.", toml_path.display()),
-            }).into_response(),
+                message: format!(
+                    "A1 plugin removed from {}. Restart IronClaw to apply.",
+                    toml_path.display()
+                ),
+            })
+            .into_response(),
             Err(e) => axum::Json(DisconnectResponse {
-                success:  false,
+                success: false,
                 agent_id: id,
-                message:  format!("Could not remove {}: {e}. Delete it manually to disconnect.", toml_path.display()),
-            }).into_response(),
+                message: format!(
+                    "Could not remove {}: {e}. Delete it manually to disconnect.",
+                    toml_path.display()
+                ),
+            })
+            .into_response(),
         };
     }
 
-    let config_dir: Option<std::path::PathBuf> = req.install_path
+    let config_dir: Option<std::path::PathBuf> = req
+        .install_path
         .as_deref()
         .map(std::path::PathBuf::from)
         .or_else(|| match id.as_str() {
-            "claude_code"    => Some(home().join(".claude")),
-            "openclaw"       => Some(home().join(".openclaw")),
-            "ollama"         => Some(home().join(".ollama")),
+            "claude_code" => Some(home().join(".claude")),
+            "openclaw" => Some(home().join(".openclaw")),
+            "ollama" => Some(home().join(".ollama")),
             "claude_desktop" => None,
             _ => Some(std::env::current_dir().unwrap_or_else(|_| home())),
         });
@@ -923,40 +1023,49 @@ pub async fn disconnect_handler(
     let mcp_path = dir.join(".mcp.json");
     if !mcp_path.exists() {
         return axum::Json(DisconnectResponse {
-            success:  true,
+            success: true,
             agent_id: id,
-            message:  "No .mcp.json found — agent was already disconnected.".into(),
-        }).into_response();
+            message: "No .mcp.json found — agent was already disconnected.".into(),
+        })
+        .into_response();
     }
 
     match std::fs::read_to_string(&mcp_path) {
         Ok(existing) => {
             if !existing.contains("\"a1\"") {
                 return axum::Json(DisconnectResponse {
-                    success:  true,
+                    success: true,
                     agent_id: id,
-                    message:  "A1 was not found in this agent's config — already disconnected.".into(),
-                }).into_response();
+                    message: "A1 was not found in this agent's config — already disconnected."
+                        .into(),
+                })
+                .into_response();
             }
             let cleaned = remove_a1_from_mcp_json(&existing).unwrap_or(existing);
             match std::fs::write(&mcp_path, &cleaned) {
                 Ok(_) => axum::Json(DisconnectResponse {
-                    success:  true,
+                    success: true,
                     agent_id: id,
-                    message:  format!("A1 removed from {}. Restart your agent to apply.", mcp_path.display()),
-                }).into_response(),
+                    message: format!(
+                        "A1 removed from {}. Restart your agent to apply.",
+                        mcp_path.display()
+                    ),
+                })
+                .into_response(),
                 Err(e) => axum::Json(DisconnectResponse {
-                    success:  false,
+                    success: false,
                     agent_id: id,
-                    message:  format!("Could not write {}: {e}", mcp_path.display()),
-                }).into_response(),
+                    message: format!("Could not write {}: {e}", mcp_path.display()),
+                })
+                .into_response(),
             }
         }
         Err(e) => axum::Json(DisconnectResponse {
-            success:  false,
+            success: false,
             agent_id: id,
-            message:  format!("Could not read {}: {e}", mcp_path.display()),
-        }).into_response(),
+            message: format!("Could not read {}: {e}", mcp_path.display()),
+        })
+        .into_response(),
     }
 }
 
@@ -995,9 +1104,16 @@ pub async fn pull_handler(
 
     tokio::spawn(async move {
         // Find install command for this agent
-        let install_cmd = KNOWN_AGENTS.iter()
+        let install_cmd = KNOWN_AGENTS
+            .iter()
             .find(|a| a.id == agent_id.as_str())
-            .map(|a| if platform == "win" { a.install_cmd_win } else { a.install_cmd_unix })
+            .map(|a| {
+                if platform == "win" {
+                    a.install_cmd_win
+                } else {
+                    a.install_cmd_unix
+                }
+            })
             .unwrap_or("");
 
         if install_cmd.is_empty() {
@@ -1012,10 +1128,11 @@ pub async fn pull_handler(
         }
 
         // Log the command we're running
-        let _ = tx.send(Ok(Event::default()
-            .event("log")
-            .data(format!("$ {install_cmd}"))
-        )).await;
+        let _ = tx
+            .send(Ok(Event::default()
+                .event("log")
+                .data(format!("$ {install_cmd}"))))
+            .await;
 
         // Spawn the install process
         let mut child = match tokio::process::Command::new("sh")
@@ -1027,13 +1144,15 @@ pub async fn pull_handler(
         {
             Ok(c) => c,
             Err(e) => {
-                let _ = tx.send(Ok(Event::default()
-                    .event("done")
-                    .data(serde_json::to_string(&json!({
-                        "success": false,
-                        "message": format!("Failed to start install process: {e}")
-                    })).unwrap_or_default())
-                )).await;
+                let _ = tx
+                    .send(Ok(Event::default().event("done").data(
+                        serde_json::to_string(&json!({
+                            "success": false,
+                            "message": format!("Failed to start install process: {e}")
+                        }))
+                        .unwrap_or_default(),
+                    )))
+                    .await;
                 return;
             }
         };
@@ -1057,7 +1176,11 @@ pub async fn pull_handler(
             let tx3 = tx.clone();
             tokio::spawn(async move {
                 while let Ok(Some(line)) = lines.next_line().await {
-                    let _ = tx3.send(Ok(Event::default().event("log").data(format!("stderr: {line}")))).await;
+                    let _ = tx3
+                        .send(Ok(Event::default()
+                            .event("log")
+                            .data(format!("stderr: {line}"))))
+                        .await;
                 }
             });
         }
@@ -1072,15 +1195,15 @@ pub async fn pull_handler(
             format!("✗ Installation of '{agent_id}' failed. See output above for details.")
         };
 
-        let _ = tx.send(Ok(Event::default()
-            .event("done")
-            .data(serde_json::to_string(&json!({ "success": success, "message": message }))
-                .unwrap_or_default())
-        )).await;
+        let _ = tx
+            .send(Ok(Event::default().event("done").data(
+                serde_json::to_string(&json!({ "success": success, "message": message }))
+                    .unwrap_or_default(),
+            )))
+            .await;
     });
 
-    Sse::new(ReceiverStream::new(rx))
-        .keep_alive(KeepAlive::default())
+    Sse::new(ReceiverStream::new(rx)).keep_alive(KeepAlive::default())
 }
 
 // ─── POST /v1/agents/remove ───────────────────────────────────────────────────
@@ -1095,29 +1218,29 @@ pub struct RemoveRequest {
 
 #[derive(Debug, Serialize)]
 pub struct RemoveResponse {
-    pub success:  bool,
+    pub success: bool,
     pub agent_id: String,
-    pub message:  String,
-    pub output:   String,
+    pub message: String,
+    pub output: String,
 }
 
-pub async fn remove_handler(
-    Json(req): Json<RemoveRequest>,
-) -> impl IntoResponse {
+pub async fn remove_handler(Json(req): Json<RemoveRequest>) -> impl IntoResponse {
     let platform = req.platform.as_deref().unwrap_or("unix");
 
-    let uninstall_cmd = KNOWN_AGENTS.iter()
+    let uninstall_cmd = KNOWN_AGENTS
+        .iter()
         .find(|a| a.id == req.agent_id.as_str())
         .map(|a| a.uninstall_cmd)
         .unwrap_or("");
 
     if uninstall_cmd.is_empty() {
         return Json(RemoveResponse {
-            success:  false,
+            success: false,
             agent_id: req.agent_id,
-            message:  "No automatic uninstall command available. Remove manually.".into(),
-            output:   "".into(),
-        }).into_response();
+            message: "No automatic uninstall command available. Remove manually.".into(),
+            output: "".into(),
+        })
+        .into_response();
     }
 
     let result = tokio::process::Command::new("sh")
@@ -1146,11 +1269,12 @@ pub async fn remove_handler(
             }).into_response()
         }
         Err(e) => Json(RemoveResponse {
-            success:  false,
+            success: false,
             agent_id: req.agent_id,
-            message:  format!("Failed to run uninstall: {e}"),
-            output:   "".into(),
-        }).into_response(),
+            message: format!("Failed to run uninstall: {e}"),
+            output: "".into(),
+        })
+        .into_response(),
     }
 }
 
@@ -1165,37 +1289,37 @@ pub async fn remove_handler(
 
 #[derive(Debug, Deserialize)]
 pub struct ProbeLiveRequest {
-    pub agent_id:    String,
+    pub agent_id: String,
     pub install_path: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ProbeLiveResponse {
     /// The actual contents of the A1 config file written to the agent's directory
-    pub config_file_path:     Option<String>,
+    pub config_file_path: Option<String>,
     pub config_file_contents: Option<String>,
     /// Output of running the agent binary directly (e.g. `ironclaw --version`)
-    pub binary_check_cmd:     String,
-    pub binary_check_output:  String,
-    pub binary_found:         bool,
+    pub binary_check_cmd: String,
+    pub binary_check_output: String,
+    pub binary_found: bool,
     /// Result of a real A1 authorize call (policy enforcement test)
-    pub policy_test_allowed:  PolicyTestResult,
-    pub policy_test_denied:   PolicyTestResult,
+    pub policy_test_allowed: PolicyTestResult,
+    pub policy_test_denied: PolicyTestResult,
     /// HTTP probe: is the agent's API reachable right now?
-    pub runtime_reachable:    bool,
-    pub runtime_port:         Option<u16>,
-    pub runtime_version:      Option<String>,
-    pub runtime_health_url:   Option<String>,
+    pub runtime_reachable: bool,
+    pub runtime_port: Option<u16>,
+    pub runtime_version: Option<String>,
+    pub runtime_health_url: Option<String>,
     /// Overall: is this a genuine, working A1 connection?
-    pub genuine_connection:   bool,
-    pub proof_summary:        String,
+    pub genuine_connection: bool,
+    pub proof_summary: String,
 }
 
 #[derive(Debug, Serialize)]
 pub struct PolicyTestResult {
-    pub tool:    String,
+    pub tool: String,
     pub allowed: bool,
-    pub reason:  String,
+    pub reason: String,
     pub a1_token_issued: bool,
 }
 
@@ -1208,7 +1332,9 @@ pub async fn probe_live_handler(
     // ── 1. Config file check ──────────────────────────────────────────────────
     let (config_path, config_contents) = match agent_id {
         "ironclaw" => {
-            let dir = req.install_path.as_deref()
+            let dir = req
+                .install_path
+                .as_deref()
                 .map(PathBuf::from)
                 .unwrap_or_else(|| home().join(".ironclaw"));
             let p = dir.join("a1_plugin.toml");
@@ -1220,13 +1346,15 @@ pub async fn probe_live_handler(
             }
         }
         "claude_code" | "openclaw" | "ollama" => {
-            let dir = req.install_path.as_deref()
+            let dir = req
+                .install_path
+                .as_deref()
                 .map(PathBuf::from)
                 .or_else(|| match agent_id {
                     "claude_code" => Some(home().join(".claude")),
-                    "openclaw"    => Some(home().join(".openclaw")),
-                    "ollama"      => Some(home().join(".ollama")),
-                    _             => None,
+                    "openclaw" => Some(home().join(".openclaw")),
+                    "ollama" => Some(home().join(".ollama")),
+                    _ => None,
                 });
             if let Some(d) = dir {
                 let p = d.join(".mcp.json");
@@ -1246,19 +1374,27 @@ pub async fn probe_live_handler(
     // ── 2. Binary check ───────────────────────────────────────────────────────
     let (bin_cmd, bin_output, bin_found) = {
         let cmd = match agent_id {
-            "ironclaw"    => "ironclaw --version 2>&1 || ironclaw version 2>&1 || echo 'not in PATH'",
-            "openclaw"    => "openclaw --version 2>&1 || echo 'not in PATH'",
+            "ironclaw" => "ironclaw --version 2>&1 || ironclaw version 2>&1 || echo 'not in PATH'",
+            "openclaw" => "openclaw --version 2>&1 || echo 'not in PATH'",
             "claude_code" => "claude --version 2>&1 || echo 'not in PATH'",
-            "ollama"      => "ollama --version 2>&1 || echo 'not in PATH'",
-            _             => "echo 'no version command'",
+            "ollama" => "ollama --version 2>&1 || echo 'not in PATH'",
+            _ => "echo 'no version command'",
         };
         let out = tokio::process::Command::new("sh")
-            .arg("-c").arg(cmd)
-            .output().await;
-        let output_str = out.map(|o| {
-            let s = format!("{}{}", String::from_utf8_lossy(&o.stdout), String::from_utf8_lossy(&o.stderr));
-            s.trim().to_string()
-        }).unwrap_or_else(|e| format!("error: {e}"));
+            .arg("-c")
+            .arg(cmd)
+            .output()
+            .await;
+        let output_str = out
+            .map(|o| {
+                let s = format!(
+                    "{}{}",
+                    String::from_utf8_lossy(&o.stdout),
+                    String::from_utf8_lossy(&o.stderr)
+                );
+                s.trim().to_string()
+            })
+            .unwrap_or_else(|e| format!("error: {e}"));
         let found = !output_str.contains("not in PATH") && !output_str.is_empty();
         (cmd.to_string(), output_str, found)
     };
@@ -1268,8 +1404,8 @@ pub async fn probe_live_handler(
     // "allowed" test: files.read — should PASS
     // "denied" test:  network.raw_socket — should DENY
 
-    let base = std::env::var("A1_PUBLIC_BASE_URL")
-        .unwrap_or_else(|_| "http://localhost:8080".into());
+    let base =
+        std::env::var("A1_PUBLIC_BASE_URL").unwrap_or_else(|_| "http://localhost:8080".into());
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
         .build()
@@ -1284,23 +1420,38 @@ pub async fn probe_live_handler(
             "context": { "path": "/tmp/test.txt", "source": "a1-probe-live" },
             "gateway_pk": gw_pk
         });
-        match client.post(format!("{base}/v1/authorize")).json(&payload).send().await {
+        match client
+            .post(format!("{base}/v1/authorize"))
+            .json(&payload)
+            .send()
+            .await
+        {
             Ok(r) => {
                 let status = r.status();
                 let body: serde_json::Value = r.json().await.unwrap_or_default();
                 PolicyTestResult {
-                    tool:            "files.read".into(),
-                    allowed:         status.is_success() && body.get("authorized").and_then(|v| v.as_bool()).unwrap_or(false),
-                    reason:          body.get("reason").and_then(|v| v.as_str()).unwrap_or("A1 evaluated the request").to_string(),
-                    a1_token_issued: body.get("token").is_some() || body.get("passport").is_some() || status.is_success(),
+                    tool: "files.read".into(),
+                    allowed: status.is_success()
+                        && body
+                            .get("authorized")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false),
+                    reason: body
+                        .get("reason")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("A1 evaluated the request")
+                        .to_string(),
+                    a1_token_issued: body.get("token").is_some()
+                        || body.get("passport").is_some()
+                        || status.is_success(),
                 }
             }
             Err(e) => PolicyTestResult {
-                tool:            "files.read".into(),
-                allowed:         false,
-                reason:          format!("Could not reach A1 gateway: {e}"),
+                tool: "files.read".into(),
+                allowed: false,
+                reason: format!("Could not reach A1 gateway: {e}"),
                 a1_token_issued: false,
-            }
+            },
         }
     };
 
@@ -1311,36 +1462,53 @@ pub async fn probe_live_handler(
             "context": { "host": "0.0.0.0", "source": "a1-probe-live" },
             "gateway_pk": gw_pk
         });
-        match client.post(format!("{base}/v1/authorize")).json(&payload).send().await {
+        match client
+            .post(format!("{base}/v1/authorize"))
+            .json(&payload)
+            .send()
+            .await
+        {
             Ok(r) => {
                 let status = r.status();
                 let body: serde_json::Value = r.json().await.unwrap_or_default();
                 // network.raw_socket should be denied (deny-list in the TOML)
-                let authorized = body.get("authorized").and_then(|v| v.as_bool()).unwrap_or(false);
+                let authorized = body
+                    .get("authorized")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
                 PolicyTestResult {
-                    tool:            "network.raw_socket".into(),
-                    allowed:         authorized,
-                    reason:          body.get("reason").and_then(|v| v.as_str())
-                        .unwrap_or(if !authorized { "A1 policy: tool on deny list" } else { "Allowed" })
+                    tool: "network.raw_socket".into(),
+                    allowed: authorized,
+                    reason: body
+                        .get("reason")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(if !authorized {
+                            "A1 policy: tool on deny list"
+                        } else {
+                            "Allowed"
+                        })
                         .to_string(),
                     a1_token_issued: authorized,
                 }
             }
             Err(_) => PolicyTestResult {
-                tool:            "network.raw_socket".into(),
-                allowed:         false,
-                reason:          "A1 gateway unreachable — gateway must be running for enforcement".into(),
+                tool: "network.raw_socket".into(),
+                allowed: false,
+                reason: "A1 gateway unreachable — gateway must be running for enforcement".into(),
                 a1_token_issued: false,
-            }
+            },
         }
     };
 
     // ── 4. HTTP probe: is the agent running right now? ────────────────────────
     let probes: &[(&str, u16, &str)] = match agent_id {
-        "ironclaw" => &[("ironclaw", 4000, "/healthz"), ("ironclaw", 4001, "/healthz")],
-        "openclaw" => &[("openclaw", 3000, "/health"),  ("openclaw", 3001, "/health")],
-        "ollama"   => &[("ollama",   11434, "/api/version")],
-        _          => &[],
+        "ironclaw" => &[
+            ("ironclaw", 4000, "/healthz"),
+            ("ironclaw", 4001, "/healthz"),
+        ],
+        "openclaw" => &[("openclaw", 3000, "/health"), ("openclaw", 3001, "/health")],
+        "ollama" => &[("ollama", 11434, "/api/version")],
+        _ => &[],
     };
 
     let mut runtime_reachable = false;
@@ -1355,16 +1523,19 @@ pub async fn probe_live_handler(
                 runtime_reachable = true;
                 runtime_port = Some(port);
                 runtime_health_url = Some(url.clone());
-                runtime_version = resp.json::<serde_json::Value>().await.ok()
-                    .and_then(|v| v.get("version").and_then(|v| v.as_str()).map(str::to_string));
+                runtime_version = resp.json::<serde_json::Value>().await.ok().and_then(|v| {
+                    v.get("version")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string)
+                });
                 break;
             }
         }
     }
 
     // ── 5. Proof summary ──────────────────────────────────────────────────────
-    let config_ok  = config_contents.is_some();
-    let genuine    = config_ok || bin_found;
+    let config_ok = config_contents.is_some();
+    let genuine = config_ok || bin_found;
 
     let proof_summary = if config_ok && bin_found && policy_allowed.allowed {
         format!(
@@ -1392,18 +1563,18 @@ pub async fn probe_live_handler(
     };
 
     Json(ProbeLiveResponse {
-        config_file_path:     config_path,
+        config_file_path: config_path,
         config_file_contents: config_contents,
-        binary_check_cmd:     bin_cmd,
-        binary_check_output:  bin_output,
-        binary_found:         bin_found,
-        policy_test_allowed:  policy_allowed,
-        policy_test_denied:   policy_denied,
+        binary_check_cmd: bin_cmd,
+        binary_check_output: bin_output,
+        binary_found: bin_found,
+        policy_test_allowed: policy_allowed,
+        policy_test_denied: policy_denied,
         runtime_reachable,
         runtime_port,
         runtime_version,
         runtime_health_url,
-        genuine_connection:   genuine,
+        genuine_connection: genuine,
         proof_summary,
     })
 }

@@ -139,22 +139,22 @@ pub use chain::{
 };
 pub use context::A1Context;
 pub use error::{A1Error, A1StorageError, StorageErrorKind};
+pub use hybrid::{
+    negotiate_algorithm, ChainAlgorithmCompatibility, ClassicalHybridAdapter, HybridPublicKey,
+    HybridSignature, HybridSigner, SignatureAlgorithm,
+};
+pub use identity::narrowing::{CapabilityRegistry, NarrowingMatrix};
+pub use identity::receipt::ProvableReceipt;
 pub use identity::{DyoloIdentity, SharedIdentity, Signer};
 #[allow(deprecated)]
 pub use intent::{
     intent_hash, Intent, IntentHash, IntentTree, MerkleProof, SiblingNode, SubScopeProof,
 };
 pub use passport::DyoloPassport;
-pub use identity::narrowing::{CapabilityRegistry, NarrowingMatrix};
-pub use identity::receipt::ProvableReceipt;
-pub use provenance::{
-    ProvenanceRoot, ProvenanceStepProof, ReasoningStepKind, ReasoningStep, ReasoningTrace,
-};
-pub use hybrid::{
-    ChainAlgorithmCompatibility, ClassicalHybridAdapter, HybridPublicKey, HybridSignature,
-    HybridSigner, SignatureAlgorithm, negotiate_algorithm,
-};
 pub use policy::{CapabilitySet, DelegationPolicy, PolicySet};
+pub use provenance::{
+    ProvenanceRoot, ProvenanceStepProof, ReasoningStep, ReasoningStepKind, ReasoningTrace,
+};
 pub use registry::{
     fresh_nonce, MemoryNonceStore, MemoryRateLimitStore, MemoryRevocationStore, NonceStore,
     RateLimitStore, RevocationStore,
@@ -166,27 +166,31 @@ pub use cert_extensions::{CertExtensions, ExtValue};
 
 #[cfg(feature = "did")]
 #[cfg_attr(docsrs, doc(cfg(feature = "did")))]
-pub use did::{AgentDid, CredentialSubject, DidDocument, VcProof, VerifiableCredential, VerificationMethod};
+pub use did::{
+    AgentDid, CredentialSubject, DidDocument, VcProof, VerifiableCredential, VerificationMethod,
+};
 
 #[cfg(feature = "zk")]
 #[cfg_attr(docsrs, doc(cfg(feature = "zk")))]
-pub use zk::{ZkChainCommitment, ZkProofMode, ZkTraceProof, anchor_hash};
+pub use zk::{anchor_hash, ZkChainCommitment, ZkProofMode, ZkTraceProof};
 
 #[cfg(feature = "anchor")]
 #[cfg_attr(docsrs, doc(cfg(feature = "anchor")))]
-pub use anchor::{AnchoredReceipt, AnchorNetwork};
+pub use anchor::{AnchorNetwork, AnchoredReceipt};
 
 #[cfg(feature = "negotiate")]
 #[cfg_attr(docsrs, doc(cfg(feature = "negotiate")))]
-pub use negotiate::{CapabilityRequest, DelegationOffer, DelegationAcceptance, NegotiationResult};
+pub use negotiate::{CapabilityRequest, DelegationAcceptance, DelegationOffer, NegotiationResult};
 
 #[cfg(feature = "swarm")]
 #[cfg_attr(docsrs, doc(cfg(feature = "swarm")))]
-pub use swarm::{SwarmPassport, SwarmMember, SwarmRole};
+pub use swarm::{SwarmMember, SwarmPassport, SwarmRole};
 
 #[cfg(feature = "governance")]
 #[cfg_attr(docsrs, doc(cfg(feature = "governance")))]
-pub use governance::{GovernancePolicy, ApprovalGate, ApprovalToken, AuditReport, KeyRotationPolicy};
+pub use governance::{
+    ApprovalGate, ApprovalToken, AuditReport, GovernancePolicy, KeyRotationPolicy,
+};
 
 #[cfg(feature = "async")]
 #[cfg_attr(docsrs, doc(cfg(feature = "async")))]

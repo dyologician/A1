@@ -197,8 +197,16 @@ mod tests {
         let receipt = make_receipt();
         let fp = receipt.inner.chain_fingerprint;
         let mut trace = ReasoningTrace::new(1_700_000_000);
-        trace.record(ReasoningStepKind::Thought, b"analyzing the request", 1_700_000_001);
-        trace.record(ReasoningStepKind::FinalAction, b"execute trade", 1_700_000_002);
+        trace.record(
+            ReasoningStepKind::Thought,
+            b"analyzing the request",
+            1_700_000_001,
+        );
+        trace.record(
+            ReasoningStepKind::FinalAction,
+            b"execute trade",
+            1_700_000_002,
+        );
 
         let root = trace.finalize(1_700_000_003, &fp).unwrap();
         let receipt = receipt.with_provenance(root);
@@ -241,7 +249,11 @@ mod tests {
         trace.record(ReasoningStepKind::Thought, b"checking price", 1_700_000_001);
         trace.record_tool_call("get_price", b"{\"symbol\":\"AAPL\"}", 1_700_000_002);
         trace.record(ReasoningStepKind::Observation, b"182.50", 1_700_000_003);
-        trace.record(ReasoningStepKind::FinalAction, b"buy AAPL x10", 1_700_000_004);
+        trace.record(
+            ReasoningStepKind::FinalAction,
+            b"buy AAPL x10",
+            1_700_000_004,
+        );
 
         let receipt = make_receipt();
         let fp = receipt.inner.chain_fingerprint;

@@ -406,48 +406,100 @@ pub unsafe extern "C" fn dyolo_authorize_json(
             || out_buf.is_null()
             || out_buf_len == 0
         {
-            return Err((A1Status::A1ErrUnknown as c_int, "null or zero-length argument".to_string()));
+            return Err((
+                A1Status::A1ErrUnknown as c_int,
+                "null or zero-length argument".to_string(),
+            ));
         }
 
         if rev_store.is_null() || nonce_store.is_null() {
-            return Err((A1Status::A1ErrUnknown as c_int, "null store pointer argument".to_string()));
+            return Err((
+                A1Status::A1ErrUnknown as c_int,
+                "null store pointer argument".to_string(),
+            ));
         }
 
         let chain_str = unsafe { CStr::from_ptr(chain_json) }
             .to_str()
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("chain_json is not valid UTF-8: {e}")))?;
+            .map_err(|e| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    format!("chain_json is not valid UTF-8: {e}"),
+                )
+            })?;
 
         let pk_hex = unsafe { CStr::from_ptr(agent_pk_hex) }
             .to_str()
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("agent_pk_hex is not valid UTF-8: {e}")))?;
+            .map_err(|e| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    format!("agent_pk_hex is not valid UTF-8: {e}"),
+                )
+            })?;
 
         let action = unsafe { CStr::from_ptr(intent_action) }
             .to_str()
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("intent_action is not valid UTF-8: {e}")))?;
+            .map_err(|e| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    format!("intent_action is not valid UTF-8: {e}"),
+                )
+            })?;
 
         let mac: [u8; 32] = unsafe { std::slice::from_raw_parts(mac_key, 32) }
             .try_into()
-            .map_err(|_| (A1Status::A1ErrUnknown as c_int, "mac_key must be 32 bytes".to_string()))?;
+            .map_err(|_| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    "mac_key must be 32 bytes".to_string(),
+                )
+            })?;
 
         // Parse agent public key
         let pk_bytes: [u8; 32] = hex::decode(pk_hex)
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("invalid agent_pk_hex: {e}")))?
+            .map_err(|e| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    format!("invalid agent_pk_hex: {e}"),
+                )
+            })?
             .try_into()
-            .map_err(|_| (A1Status::A1ErrUnknown as c_int, "agent_pk must be 32 bytes".to_string()))?;
-        let agent_pk = ed25519_dalek::VerifyingKey::from_bytes(&pk_bytes)
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("invalid agent public key: {e}")))?;
+            .map_err(|_| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    "agent_pk must be 32 bytes".to_string(),
+                )
+            })?;
+        let agent_pk = ed25519_dalek::VerifyingKey::from_bytes(&pk_bytes).map_err(|e| {
+            (
+                A1Status::A1ErrUnknown as c_int,
+                format!("invalid agent public key: {e}"),
+            )
+        })?;
 
         // Deserialize the chain
-        let signed: crate::wire::SignedChain =
-            serde_json::from_str(chain_str).map_err(|e| (A1Status::A1ErrWireFormat as c_int, format!("chain_json parse error: {e}")))?;
+        let signed: crate::wire::SignedChain = serde_json::from_str(chain_str).map_err(|e| {
+            (
+                A1Status::A1ErrWireFormat as c_int,
+                format!("chain_json parse error: {e}"),
+            )
+        })?;
 
         #[allow(deprecated)]
-        let chain = signed
-            .into_chain()
-            .map_err(|e| (A1Status::A1ErrWireFormat as c_int, format!("chain conversion error: {e}")))?;
+        let chain = signed.into_chain().map_err(|e| {
+            (
+                A1Status::A1ErrWireFormat as c_int,
+                format!("chain conversion error: {e}"),
+            )
+        })?;
 
         // Full intent path - use Intent::new to build the structural hash safely
-        let intent = Intent::new(action).map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("intent error: {e}")))?;
+        let intent = Intent::new(action).map_err(|e| {
+            (
+                A1Status::A1ErrUnknown as c_int,
+                format!("intent error: {e}"),
+            )
+        })?;
         let intent_hash = intent.hash();
 
         let action_result = chain
@@ -462,7 +514,12 @@ pub unsafe extern "C" fn dyolo_authorize_json(
             .map_err(|e| (a1_error_to_status(&e), e.to_string()))?;
 
         let token = crate::wire::VerifiedToken::sign(&action_result.receipt, &mac);
-        serde_json::to_string(&token).map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("token serialization: {e}")))
+        serde_json::to_string(&token).map_err(|e| {
+            (
+                A1Status::A1ErrUnknown as c_int,
+                format!("token serialization: {e}"),
+            )
+        })
     });
 
     match result {
@@ -522,7 +579,10 @@ pub unsafe extern "C" fn dyolo_authorize_receipt_json(
             || rev_store.is_null()
             || nonce_store.is_null()
         {
-            return Err((A1Status::A1ErrUnknown as c_int, "null or zero-length argument".to_string()));
+            return Err((
+                A1Status::A1ErrUnknown as c_int,
+                "null or zero-length argument".to_string(),
+            ));
         }
 
         let chain_str = unsafe { CStr::from_ptr(chain_json) }
@@ -530,25 +590,60 @@ pub unsafe extern "C" fn dyolo_authorize_receipt_json(
             .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("chain_json: {e}")))?;
         let pk_hex = unsafe { CStr::from_ptr(agent_pk_hex) }
             .to_str()
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("agent_pk_hex: {e}")))?;
+            .map_err(|e| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    format!("agent_pk_hex: {e}"),
+                )
+            })?;
         let action = unsafe { CStr::from_ptr(intent_action) }
             .to_str()
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("intent_action: {e}")))?;
+            .map_err(|e| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    format!("intent_action: {e}"),
+                )
+            })?;
 
         let pk_bytes: [u8; 32] = hex::decode(pk_hex)
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("invalid agent_pk_hex: {e}")))?
+            .map_err(|e| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    format!("invalid agent_pk_hex: {e}"),
+                )
+            })?
             .try_into()
-            .map_err(|_| (A1Status::A1ErrUnknown as c_int, "agent_pk must be 32 bytes".to_string()))?;
-        let agent_pk = ed25519_dalek::VerifyingKey::from_bytes(&pk_bytes)
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("invalid agent public key: {e}")))?;
+            .map_err(|_| {
+                (
+                    A1Status::A1ErrUnknown as c_int,
+                    "agent_pk must be 32 bytes".to_string(),
+                )
+            })?;
+        let agent_pk = ed25519_dalek::VerifyingKey::from_bytes(&pk_bytes).map_err(|e| {
+            (
+                A1Status::A1ErrUnknown as c_int,
+                format!("invalid agent public key: {e}"),
+            )
+        })?;
 
-        let signed: crate::wire::SignedChain =
-            serde_json::from_str(chain_str).map_err(|e| (A1Status::A1ErrWireFormat as c_int, format!("chain_json parse error: {e}")))?;
+        let signed: crate::wire::SignedChain = serde_json::from_str(chain_str).map_err(|e| {
+            (
+                A1Status::A1ErrWireFormat as c_int,
+                format!("chain_json parse error: {e}"),
+            )
+        })?;
 
         #[allow(deprecated)]
-        let chain = signed.into_chain().map_err(|e| (A1Status::A1ErrWireFormat as c_int, format!("{e}")))?;
+        let chain = signed
+            .into_chain()
+            .map_err(|e| (A1Status::A1ErrWireFormat as c_int, format!("{e}")))?;
 
-        let intent = Intent::new(action).map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("intent error: {e}")))?;
+        let intent = Intent::new(action).map_err(|e| {
+            (
+                A1Status::A1ErrUnknown as c_int,
+                format!("intent error: {e}"),
+            )
+        })?;
         let intent_hash = intent.hash();
 
         let authorized = chain
@@ -562,8 +657,12 @@ pub unsafe extern "C" fn dyolo_authorize_receipt_json(
             )
             .map_err(|e| (a1_error_to_status(&e), e.to_string()))?;
 
-        serde_json::to_string(&authorized.receipt)
-            .map_err(|e| (A1Status::A1ErrUnknown as c_int, format!("receipt serialization: {e}")))
+        serde_json::to_string(&authorized.receipt).map_err(|e| {
+            (
+                A1Status::A1ErrUnknown as c_int,
+                format!("receipt serialization: {e}"),
+            )
+        })
     });
 
     match result {

@@ -76,7 +76,8 @@ async fn negotiate_inner(
     let intent_hash = intent.hash();
 
     let expiry = now + req.ttl_secs.min(86400);
-    let cert = CertBuilder::new(delegate_pk, intent_hash, now, expiry).sign(&state.signing_identity);
+    let cert =
+        CertBuilder::new(delegate_pk, intent_hash, now, expiry).sign(&state.signing_identity);
 
     let fingerprint_hex = cert.fingerprint_hex();
     let offer = DelegationOffer::build(&state.signing_identity, &req, cert.clone(), now, 120)?;
@@ -102,8 +103,7 @@ fn check_capability_policy(requested: &[String]) -> Result<(), a1::A1Error> {
         ));
     }
 
-    let allowed: std::collections::HashSet<&str> =
-        allowed_raw.split(',').map(str::trim).collect();
+    let allowed: std::collections::HashSet<&str> = allowed_raw.split(',').map(str::trim).collect();
 
     for cap in requested {
         if !allowed.contains(cap.as_str()) {

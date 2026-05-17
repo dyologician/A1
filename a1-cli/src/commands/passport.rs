@@ -1,6 +1,6 @@
+use a1::{DyoloIdentity, DyoloPassport, SystemClock};
 use anyhow::{bail, Context, Result};
 use clap::{Args, Subcommand};
-use a1::{DyoloIdentity, DyoloPassport, SystemClock};
 
 #[derive(Args)]
 pub struct PassportArgs {
@@ -108,8 +108,9 @@ fn parse_ttl(s: &str) -> Result<u64> {
             .with_context(|| format!("invalid minute count in ttl '{s}'"))?;
         return Ok(n * 60);
     }
-    s.parse::<u64>()
-        .with_context(|| format!("ttl must be a number of seconds or use a d/h/m suffix, got '{s}'"))
+    s.parse::<u64>().with_context(|| {
+        format!("ttl must be a number of seconds or use a d/h/m suffix, got '{s}'")
+    })
 }
 
 fn issue(args: IssuePassportArgs) -> Result<()> {
@@ -129,13 +130,8 @@ fn issue(args: IssuePassportArgs) -> Result<()> {
     };
 
     let clock = SystemClock;
-    let passport = DyoloPassport::issue_from_csv(
-        &args.namespace,
-        &args.allow,
-        ttl_secs,
-        &identity,
-        &clock,
-    )?;
+    let passport =
+        DyoloPassport::issue_from_csv(&args.namespace, &args.allow, ttl_secs, &identity, &clock)?;
 
     let out_path = args
         .out
@@ -170,8 +166,14 @@ fn inspect(args: InspectPassportArgs) -> Result<()> {
         println!("Passport: {}", args.path);
         println!("  Namespace        : {}", passport.namespace);
         println!("  Capability mask  : {}", passport.capability_mask);
-        println!("  Scope root       : {}", hex::encode(passport.scope_root()?));
-        println!("  Holder public key: {}", hex::encode(passport.verifying_key().as_bytes()));
+        println!(
+            "  Scope root       : {}",
+            hex::encode(passport.scope_root()?)
+        );
+        println!(
+            "  Holder public key: {}",
+            hex::encode(passport.verifying_key().as_bytes())
+        );
         println!("  Cert issued_at   : {}", passport.cert.issued_at);
         println!("  Cert expires_at  : {}", passport.cert.expiration_unix);
         println!("  ProvTag          : 64796f6c6f");
@@ -197,8 +199,8 @@ fn sub(args: SubPassportArgs) -> Result<()> {
         let identity = load_identity(&args.key)?;
         let clock = SystemClock;
 
-        let delegate_bytes = hex::decode(&args.delegate)
-            .context("delegate key must be hex-encoded")?;
+        let delegate_bytes =
+            hex::decode(&args.delegate).context("delegate key must be hex-encoded")?;
         if delegate_bytes.len() != 32 {
             bail!("delegate public key must be 32 bytes");
         }
@@ -208,8 +210,7 @@ fn sub(args: SubPassportArgs) -> Result<()> {
             VerifyingKey::from_bytes(&pk_bytes).context("invalid delegate public key")?;
 
         let caps: Vec<&str> = args.allow.split(',').map(str::trim).collect();
-        let sub_cert =
-            passport.issue_sub(delegate_pk, &caps, ttl_secs, &identity, &clock)?;
+        let sub_cert = passport.issue_sub(delegate_pk, &caps, ttl_secs, &identity, &clock)?;
 
         let json = serde_json::to_string_pretty(&sub_cert)?;
         let out_path = args
@@ -233,8 +234,8 @@ fn sub(args: SubPassportArgs) -> Result<()> {
 }
 
 fn load_identity(path: &str) -> Result<DyoloIdentity> {
-    let hex_str = std::fs::read_to_string(path)
-        .with_context(|| format!("reading key from {path}"))?;
+    let hex_str =
+        std::fs::read_to_string(path).with_context(|| format!("reading key from {path}"))?;
     let bytes = hex::decode(hex_str.trim()).context("key file must contain a hex-encoded seed")?;
     if bytes.len() != 32 {
         bail!("key seed must be 32 bytes, got {}", bytes.len());

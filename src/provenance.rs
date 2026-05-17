@@ -346,7 +346,12 @@ impl ReasoningTrace {
     ) -> &ReasoningStep {
         let content_hash = blake3::hash(input).into();
         let metadata_hash = hash_metadata(&[("tool", tool_name)]);
-        self.record_hashed(ReasoningStepKind::ToolCall, content_hash, metadata_hash, timestamp_unix)
+        self.record_hashed(
+            ReasoningStepKind::ToolCall,
+            content_hash,
+            metadata_hash,
+            timestamp_unix,
+        )
     }
 
     /// Record an observation returned by a tool.
@@ -358,7 +363,12 @@ impl ReasoningTrace {
     ) -> &ReasoningStep {
         let content_hash = blake3::hash(output).into();
         let metadata_hash = hash_metadata(&[("tool", tool_name)]);
-        self.record_hashed(ReasoningStepKind::Observation, content_hash, metadata_hash, timestamp_unix)
+        self.record_hashed(
+            ReasoningStepKind::Observation,
+            content_hash,
+            metadata_hash,
+            timestamp_unix,
+        )
     }
 
     /// Record a pre-hashed step with explicit metadata hash.
@@ -523,7 +533,8 @@ mod hex_32 {
 
     pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<[u8; 32], D::Error> {
         let raw = hex::decode(String::deserialize(d)?).map_err(serde::de::Error::custom)?;
-        raw.try_into().map_err(|_| serde::de::Error::custom("expected 32-byte hex"))
+        raw.try_into()
+            .map_err(|_| serde::de::Error::custom("expected 32-byte hex"))
     }
 }
 
@@ -537,7 +548,8 @@ mod hex_16 {
 
     pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<[u8; 16], D::Error> {
         let raw = hex::decode(String::deserialize(d)?).map_err(serde::de::Error::custom)?;
-        raw.try_into().map_err(|_| serde::de::Error::custom("expected 16-byte hex"))
+        raw.try_into()
+            .map_err(|_| serde::de::Error::custom("expected 16-byte hex"))
     }
 }
 

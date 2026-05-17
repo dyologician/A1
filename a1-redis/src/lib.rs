@@ -41,10 +41,10 @@
 //! max_cert_lifetime_secs + max_clock_drift_secs + safety_margin_secs
 //! ```
 
-use async_trait::async_trait;
-use deadpool_redis::{Config, Pool, Runtime};
 use a1::error::{A1StorageError, StorageErrorKind};
 use a1::registry::r#async::{AsyncNonceStore, AsyncRevocationStore};
+use async_trait::async_trait;
+use deadpool_redis::{Config, Pool, Runtime};
 use redis::AsyncCommands;
 
 // ── Connection helpers ────────────────────────────────────────────────────────

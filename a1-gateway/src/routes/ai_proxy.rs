@@ -5,7 +5,6 @@
 /// Non-technical users get the full agentic loop with zero accounts required.
 ///
 /// GET  /v1/ai/status  — Reports whether the proxy is configured.
-
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -26,7 +25,11 @@ pub async fn status_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     let available = key.starts_with("sk-ant-");
     Json(AiStatusResponse {
         available,
-        model: if available { "claude-sonnet-4-20250514".into() } else { String::new() },
+        model: if available {
+            "claude-sonnet-4-20250514".into()
+        } else {
+            String::new()
+        },
         note: if available {
             "Gateway AI proxy is active. No user API key required.".into()
         } else {
@@ -40,13 +43,15 @@ pub async fn status_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
 #[derive(Debug, Deserialize)]
 pub struct AiChatRequest {
     pub messages: serde_json::Value,
-    pub system:   Option<String>,
-    pub tools:    Option<serde_json::Value>,
+    pub system: Option<String>,
+    pub tools: Option<serde_json::Value>,
     #[serde(default = "default_max_tokens")]
     pub max_tokens: u32,
 }
 
-fn default_max_tokens() -> u32 { 4096 }
+fn default_max_tokens() -> u32 {
+    4096
+}
 
 pub async fn chat_handler(
     _state: State<Arc<AppState>>,
@@ -82,11 +87,12 @@ pub async fn chat_handler(
         .timeout(std::time::Duration::from_secs(120))
         .build()
     {
-        Ok(c)  => c,
+        Ok(c) => c,
         Err(e) => return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({ "error": { "message": format!("HTTP client error: {e}") } })),
-        ).into_response(),
+        )
+            .into_response(),
     };
 
     let resp = client
@@ -102,12 +108,23 @@ pub async fn chat_handler(
         Err(e) => (
             StatusCode::BAD_GATEWAY,
             Json(serde_json::json!({ "error": { "message": format!("Upstream error: {e}") } })),
-        ).into_response(),
+        )
+            .into_response(),
         Ok(r) => {
             let status = r.status();
             match r.json::<serde_json::Value>().await {
-                Ok(j)  => (StatusCode::from_u16(status.as_u16()).unwrap_or(StatusCode::OK), Json(j)).into_response(),
-                Err(e) => (StatusCode::BAD_GATEWAY, Json(serde_json::json!({ "error": { "message": format!("Parse error: {e}") } }))).into_response(),
+                Ok(j) => (
+                    StatusCode::from_u16(status.as_u16()).unwrap_or(StatusCode::OK),
+                    Json(j),
+                )
+                    .into_response(),
+                Err(e) => (
+                    StatusCode::BAD_GATEWAY,
+                    Json(
+                        serde_json::json!({ "error": { "message": format!("Parse error: {e}") } }),
+                    ),
+                )
+                    .into_response(),
             }
         }
     }

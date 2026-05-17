@@ -357,17 +357,13 @@ impl AuditSink for CompositeAuditSink {
             }));
             if let Err(e) = result {
                 if let Some(msg) = e.downcast_ref::<&str>() {
-                    eprintln!(
-                        "a1 audit: panic in CompositeAuditSink downstream: {}",
-                        msg
-                    );
+                    eprintln!("a1 audit: panic in CompositeAuditSink downstream: {}", msg);
                 } else if let Some(msg) = e.downcast_ref::<String>() {
-                    eprintln!(
-                        "a1 audit: panic in CompositeAuditSink downstream: {}",
-                        msg
-                    );
+                    eprintln!("a1 audit: panic in CompositeAuditSink downstream: {}", msg);
                 } else {
-                    eprintln!("a1 audit: panic in CompositeAuditSink downstream with unknown payload");
+                    eprintln!(
+                        "a1 audit: panic in CompositeAuditSink downstream with unknown payload"
+                    );
                 }
             }
         }
@@ -432,7 +428,8 @@ impl SiemHttpAuditSink {
         let url: url::Url = endpoint.parse()?;
         let host = url.host_str().unwrap_or("localhost").to_string();
         let port = url.port_or_known_default().unwrap_or(80);
-        let path = format!("{}{}",
+        let path = format!(
+            "{}{}",
             url.path(),
             url.query().map(|q| format!("?{}", q)).unwrap_or_default()
         );
@@ -453,7 +450,7 @@ impl SiemHttpAuditSink {
 impl AuditSink for SiemHttpAuditSink {
     #[inline(always)]
     fn emit(&self, event: AuditEvent) {
-        // Non-blocking send; drops the event if the background task panics/dies 
+        // Non-blocking send; drops the event if the background task panics/dies
         // to prevent memory exhaustion in the hot path.
         let _ = self.sender.send(event);
     }

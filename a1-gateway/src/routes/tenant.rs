@@ -28,7 +28,6 @@
 ///
 /// Without multi-tenant mode, the tenant is the empty string, matching the
 /// existing single-tenant key layout.
-
 use std::sync::Arc;
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
@@ -112,10 +111,10 @@ pub fn tenant_store_prefix(namespace: &str, tenant_id: Option<&str>) -> String {
 #[derive(Debug, Serialize)]
 pub struct TenantInfoResponse {
     pub multi_tenant_enabled: bool,
-    pub tenant_required:      bool,
-    pub active_tenant:        Option<String>,
-    pub allowlist:            Vec<String>,
-    pub store_prefix:         String,
+    pub tenant_required: bool,
+    pub active_tenant: Option<String>,
+    pub allowlist: Vec<String>,
+    pub store_prefix: String,
 }
 
 pub async fn info_handler(
@@ -145,7 +144,7 @@ pub async fn info_handler(
 
     Json(TenantInfoResponse {
         multi_tenant_enabled: enabled,
-        tenant_required:      required,
+        tenant_required: required,
         active_tenant,
         allowlist,
         store_prefix,
@@ -156,10 +155,10 @@ pub async fn info_handler(
 
 #[derive(Debug, Serialize)]
 pub struct TenantConfigResponse {
-    pub tenant:           Option<String>,
-    pub allowed_caps:     Vec<String>,
-    pub max_chain_depth:  u8,
-    pub max_ttl_seconds:  u64,
+    pub tenant: Option<String>,
+    pub allowed_caps: Vec<String>,
+    pub max_chain_depth: u8,
+    pub max_ttl_seconds: u64,
 }
 
 pub async fn config_handler(
@@ -189,7 +188,10 @@ pub async fn config_handler(
     let max_chain_depth: u8 = tenant
         .as_deref()
         .and_then(|tid| {
-            let key = format!("A1_TENANT_{}_MAX_DEPTH", tid.to_uppercase().replace('-', "_"));
+            let key = format!(
+                "A1_TENANT_{}_MAX_DEPTH",
+                tid.to_uppercase().replace('-', "_")
+            );
             std::env::var(key).ok()?.parse().ok()
         })
         .or_else(|| std::env::var("A1_MAX_CHAIN_DEPTH").ok()?.parse().ok())

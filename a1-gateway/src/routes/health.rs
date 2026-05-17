@@ -7,17 +7,17 @@ use crate::state::AppState;
 
 #[derive(Serialize)]
 struct HealthResponse {
-    status:                &'static str,
-    signing_pk_hex:        String,
-    version:               &'static str,
-    webhook_enabled:       bool,
-    jwt_exchange_enabled:  bool,
-    multi_tenant_enabled:  bool,
-    storage_backend:       &'static str,
+    status: &'static str,
+    signing_pk_hex: String,
+    version: &'static str,
+    webhook_enabled: bool,
+    jwt_exchange_enabled: bool,
+    multi_tenant_enabled: bool,
+    storage_backend: &'static str,
 }
 
 pub async fn handler(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let webhook_enabled      = state.webhook_url.is_some();
+    let webhook_enabled = state.webhook_url.is_some();
     let jwt_exchange_enabled = std::env::var("A1_JWT_JWKS_URL").is_ok();
     let multi_tenant_enabled = std::env::var("A1_MULTI_TENANT")
         .map(|v| v == "true" || v == "1")

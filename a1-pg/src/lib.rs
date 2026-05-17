@@ -38,11 +38,11 @@
 //! }
 //! ```
 
-use async_trait::async_trait;
 use a1::{
     registry::r#async::{AsyncNonceStore, AsyncRevocationStore},
     A1StorageError,
 };
+use async_trait::async_trait;
 use sqlx::PgPool;
 
 // ── DDL ───────────────────────────────────────────────────────────────────────
@@ -178,12 +178,11 @@ impl PgNonceStore {
     ///
     /// Call this periodically to prevent the nonce table from growing indefinitely.
     pub async fn prune_nonces_before(&self, timestamp_unix: u64) -> Result<u64, A1StorageError> {
-        let result =
-            sqlx::query("DELETE FROM a1_nonces WHERE consumed_at < TO_TIMESTAMP($1)")
-                .bind(timestamp_unix as f64)
-                .execute(&self.pool)
-                .await
-                .map_err(|e| A1StorageError::transient(e.to_string()))?;
+        let result = sqlx::query("DELETE FROM a1_nonces WHERE consumed_at < TO_TIMESTAMP($1)")
+            .bind(timestamp_unix as f64)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| A1StorageError::transient(e.to_string()))?;
         Ok(result.rows_affected())
     }
 }
@@ -291,7 +290,7 @@ async fn try_consume_batch_once(
     }
 
     let existing_count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM a1_nonces WHERE tenant_id = '' AND nonce = ANY($1)"
+        "SELECT COUNT(*) FROM a1_nonces WHERE tenant_id = '' AND nonce = ANY($1)",
     )
     .bind(&nonce_arrays)
     .fetch_one(&mut *tx)
@@ -308,7 +307,7 @@ async fn try_consume_batch_once(
     sqlx::query(
         "INSERT INTO a1_nonces (tenant_id, nonce) 
          SELECT '', unnest($1::bytea[]) 
-         ON CONFLICT DO NOTHING"
+         ON CONFLICT DO NOTHING",
     )
     .bind(&nonce_arrays)
     .execute(&mut *tx)

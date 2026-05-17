@@ -415,8 +415,7 @@ impl DyoloChain {
         sink: &dyn AuditSink,
     ) -> Result<AuthorizedAction, A1Error> {
         #[cfg(feature = "tracing")]
-        let _span =
-            tracing::info_span!("a1::authorize", chain_len = self.certs.len()).entered();
+        let _span = tracing::info_span!("a1::authorize", chain_len = self.certs.len()).entered();
 
         let principal_hex = hex::encode(self.principal_pk.as_bytes());
         let executor_hex = hex::encode(agent_pk.as_bytes());
@@ -477,10 +476,7 @@ impl DyoloChain {
             self.validate_structure(agent_pk, intent_h, proof, clock, self.drift_tolerance_secs)?;
 
         for fp in &v.cert_fingerprints {
-            if revocation
-                .is_revoked(fp)
-                .map_err(A1Error::StorageFailure)?
-            {
+            if revocation.is_revoked(fp).map_err(A1Error::StorageFailure)? {
                 return Err(A1Error::Revoked);
             }
         }

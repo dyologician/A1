@@ -353,7 +353,7 @@ impl PolicySet {
             PolicyInput::List(policies) => Ok(Self { policies }),
         }
     }
-    
+
     /// Export the policy set to a YAML string for Policy-as-Code pipelines.
     #[cfg(feature = "policy-yaml")]
     pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {

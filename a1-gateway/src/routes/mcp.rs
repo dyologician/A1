@@ -54,14 +54,23 @@ pub struct JsonRpcError {
 
 impl JsonRpcResponse {
     fn ok(id: Option<Value>, result: Value) -> Self {
-        Self { jsonrpc: "2.0", id, result: Some(result), error: None }
+        Self {
+            jsonrpc: "2.0",
+            id,
+            result: Some(result),
+            error: None,
+        }
     }
     fn err(id: Option<Value>, code: i32, message: impl Into<String>) -> Self {
         Self {
             jsonrpc: "2.0",
             id,
             result: None,
-            error: Some(JsonRpcError { code, message: message.into(), data: None }),
+            error: Some(JsonRpcError {
+                code,
+                message: message.into(),
+                data: None,
+            }),
         }
     }
 }
@@ -198,15 +207,20 @@ pub async fn post_handler(
     Json(req): Json<JsonRpcRequest>,
 ) -> impl IntoResponse {
     if req.jsonrpc != "2.0" {
-        return Json(JsonRpcResponse::err(req.id, -32600, "Invalid JSON-RPC version — must be \"2.0\""));
+        return Json(JsonRpcResponse::err(
+            req.id,
+            -32600,
+            "Invalid JSON-RPC version — must be \"2.0\"",
+        ));
     }
 
     let id = req.id;
 
     match req.method.as_str() {
         // ── MCP lifecycle ─────────────────────────────────────────────────────
-        "initialize" => {
-            Json(JsonRpcResponse::ok(id, json!({
+        "initialize" => Json(JsonRpcResponse::ok(
+            id,
+            json!({
                 "protocolVersion": "2024-11-05",
                 "serverInfo": {
                     "name": "a1-gateway",
@@ -216,8 +230,8 @@ pub async fn post_handler(
                 "capabilities": {
                     "tools": {}
                 }
-            })))
-        }
+            }),
+        )),
 
         "notifications/initialized" => {
             // No-op acknowledgement
@@ -225,9 +239,7 @@ pub async fn post_handler(
         }
 
         // ── Tool listing ──────────────────────────────────────────────────────
-        "tools/list" => {
-            Json(JsonRpcResponse::ok(id, tool_list()))
-        }
+        "tools/list" => Json(JsonRpcResponse::ok(id, tool_list())),
 
         // ── Tool invocation ───────────────────────────────────────────────────
         "tools/call" => {
@@ -236,8 +248,9 @@ pub async fn post_handler(
             let args = params.get("arguments").cloned().unwrap_or(json!({}));
 
             match tool_name {
-                "a1_check_health" => {
-                    Json(JsonRpcResponse::ok(id, json!({
+                "a1_check_health" => Json(JsonRpcResponse::ok(
+                    id,
+                    json!({
                         "content": [{
                             "type": "text",
                             "text": format!(
@@ -246,29 +259,48 @@ pub async fn post_handler(
                                 state.gateway_pk_hex
                             )
                         }]
-                    })))
-                }
+                    }),
+                )),
 
                 "a1_list_capabilities" => {
                     let caps = capability_list();
-                    let list: String = caps.as_array()
-                        .map(|arr| arr.iter().map(|c| {
-                            let name = c["name"].as_str().unwrap_or("");
-                            let desc = c["description"].as_str().unwrap_or("");
-                            format!("  {name:<24} — {desc}")
-                        }).collect::<Vec<_>>().join("\n"))
+                    let list: String = caps
+                        .as_array()
+                        .map(|arr| {
+                            arr.iter()
+                                .map(|c| {
+                                    let name = c["name"].as_str().unwrap_or("");
+                                    let desc = c["description"].as_str().unwrap_or("");
+                                    format!("  {name:<24} — {desc}")
+                                })
+                                .collect::<Vec<_>>()
+                                .join("\n")
+                        })
                         .unwrap_or_default();
-                    Json(JsonRpcResponse::ok(id, json!({
-                        "content": [{"type":"text","text": format!("A1 capability names:\n\n{list}")}]
-                    })))
+                    Json(JsonRpcResponse::ok(
+                        id,
+                        json!({
+                            "content": [{"type":"text","text": format!("A1 capability names:\n\n{list}")}]
+                        }),
+                    ))
                 }
 
                 "a1_authorize" => {
-                    let intent_name = args.get("intent_name").and_then(|v| v.as_str()).unwrap_or("");
-                    let executor_pk = args.get("executor_pk_hex").and_then(|v| v.as_str()).unwrap_or("");
+                    let intent_name = args
+                        .get("intent_name")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    let executor_pk = args
+                        .get("executor_pk_hex")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
 
                     if intent_name.is_empty() || executor_pk.is_empty() {
-                        return Json(JsonRpcResponse::err(id, -32602, "intent_name and executor_pk_hex are required"));
+                        return Json(JsonRpcResponse::err(
+                            id,
+                            -32602,
+                            "intent_name and executor_pk_hex are required",
+                        ));
                     }
 
                     // Forward to the real authorize endpoint internally
@@ -289,7 +321,8 @@ pub async fn post_handler(
                         "intent_params": params_body
                     });
 
-                    match client.post(format!("{base}/v1/authorize"))
+                    match client
+                        .post(format!("{base}/v1/authorize"))
                         .header("Content-Type", "application/json")
                         .json(&body)
                         .send()
@@ -301,55 +334,89 @@ pub async fn post_handler(
                             if status.is_success() {
                                 let receipt_text = serde_json::to_string_pretty(&json_body)
                                     .unwrap_or_else(|_| format!("{json_body}"));
-                                Json(JsonRpcResponse::ok(id, json!({
-                                    "content": [{"type":"text","text": format!("✅ Authorized\n\n{receipt_text}")}]
-                                })))
+                                Json(JsonRpcResponse::ok(
+                                    id,
+                                    json!({
+                                        "content": [{"type":"text","text": format!("✅ Authorized\n\n{receipt_text}")}]
+                                    }),
+                                ))
                             } else {
-                                let msg = json_body.get("error").and_then(|e| e.as_str())
+                                let msg = json_body
+                                    .get("error")
+                                    .and_then(|e| e.as_str())
                                     .unwrap_or("Authorization denied");
-                                Json(JsonRpcResponse::ok(id, json!({
-                                    "content": [{"type":"text","text": format!("❌ Authorization denied: {msg}")}],
-                                    "isError": true
-                                })))
+                                Json(JsonRpcResponse::ok(
+                                    id,
+                                    json!({
+                                        "content": [{"type":"text","text": format!("❌ Authorization denied: {msg}")}],
+                                        "isError": true
+                                    }),
+                                ))
                             }
                         }
-                        Err(e) => Json(JsonRpcResponse::err(id, -32000, format!("Gateway request failed: {e}"))),
+                        Err(e) => Json(JsonRpcResponse::err(
+                            id,
+                            -32000,
+                            format!("Gateway request failed: {e}"),
+                        )),
                     }
                 }
 
                 "a1_inspect_passport" => {
-                    let path = args.get("passport_path").and_then(|v| v.as_str()).unwrap_or("passport.json");
+                    let path = args
+                        .get("passport_path")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("passport.json");
                     match std::fs::read_to_string(path) {
-                        Ok(content) => {
-                            match serde_json::from_str::<Value>(&content) {
-                                Ok(passport) => {
-                                    let ns = passport.get("namespace").and_then(|v| v.as_str()).unwrap_or("unknown");
-                                    let caps = passport.get("capabilities")
-                                        .map(|c| serde_json::to_string(c).unwrap_or_default())
-                                        .unwrap_or_else(|| "none".to_string());
-                                    let exp = passport.get("expiration_unix")
-                                        .and_then(|v| v.as_i64())
-                                        .map(|ts| {
-                                            let now = std::time::SystemTime::now()
-                                                .duration_since(std::time::UNIX_EPOCH)
-                                                .unwrap_or_default()
-                                                .as_secs() as i64;
-                                            if ts > now { "VALID" } else { "EXPIRED" }
-                                        })
-                                        .unwrap_or("unknown");
-                                    Json(JsonRpcResponse::ok(id, json!({
+                        Ok(content) => match serde_json::from_str::<Value>(&content) {
+                            Ok(passport) => {
+                                let ns = passport
+                                    .get("namespace")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("unknown");
+                                let caps = passport
+                                    .get("capabilities")
+                                    .map(|c| serde_json::to_string(c).unwrap_or_default())
+                                    .unwrap_or_else(|| "none".to_string());
+                                let exp = passport
+                                    .get("expiration_unix")
+                                    .and_then(|v| v.as_i64())
+                                    .map(|ts| {
+                                        let now = std::time::SystemTime::now()
+                                            .duration_since(std::time::UNIX_EPOCH)
+                                            .unwrap_or_default()
+                                            .as_secs()
+                                            as i64;
+                                        if ts > now {
+                                            "VALID"
+                                        } else {
+                                            "EXPIRED"
+                                        }
+                                    })
+                                    .unwrap_or("unknown");
+                                Json(JsonRpcResponse::ok(
+                                    id,
+                                    json!({
                                         "content": [{
                                             "type": "text",
                                             "text": format!(
                                                 "Passport: {path}\n  Namespace:    {ns}\n  Capabilities: {caps}\n  Status:       {exp}"
                                             )
                                         }]
-                                    })))
-                                }
-                                Err(e) => Json(JsonRpcResponse::err(id, -32000, format!("Invalid passport JSON: {e}"))),
+                                    }),
+                                ))
                             }
-                        }
-                        Err(e) => Json(JsonRpcResponse::err(id, -32000, format!("Cannot read passport file '{path}': {e}"))),
+                            Err(e) => Json(JsonRpcResponse::err(
+                                id,
+                                -32000,
+                                format!("Invalid passport JSON: {e}"),
+                            )),
+                        },
+                        Err(e) => Json(JsonRpcResponse::err(
+                            id,
+                            -32000,
+                            format!("Cannot read passport file '{path}': {e}"),
+                        )),
                     }
                 }
 
@@ -362,16 +429,23 @@ pub async fn post_handler(
                     let admin_secret = std::env::var("A1_ADMIN_SECRET").ok();
 
                     let (path, body) = if tool_name == "a1_issue_cert" {
-                        ("/v1/cert/issue", json!({
-                            "delegate_pk_hex": args.get("delegate_pk_hex"),
-                            "capabilities": args.get("capabilities"),
-                            "ttl_seconds": args.get("ttl_seconds")
-                        }))
+                        (
+                            "/v1/cert/issue",
+                            json!({
+                                "delegate_pk_hex": args.get("delegate_pk_hex"),
+                                "capabilities": args.get("capabilities"),
+                                "ttl_seconds": args.get("ttl_seconds")
+                            }),
+                        )
                     } else {
-                        ("/v1/cert/revoke", json!({ "fingerprint": args.get("fingerprint") }))
+                        (
+                            "/v1/cert/revoke",
+                            json!({ "fingerprint": args.get("fingerprint") }),
+                        )
                     };
 
-                    let mut req = client.post(format!("{base}{path}"))
+                    let mut req = client
+                        .post(format!("{base}{path}"))
                         .header("Content-Type", "application/json")
                         .json(&body);
 
@@ -384,24 +458,29 @@ pub async fn post_handler(
                             let ok = resp.status().is_success();
                             let val: Value = resp.json().await.unwrap_or(json!({}));
                             let text = serde_json::to_string_pretty(&val).unwrap_or_default();
-                            Json(JsonRpcResponse::ok(id, json!({
-                                "content": [{"type":"text","text": if ok { format!("✅ Done\n\n{text}") } else { format!("❌ Failed\n\n{text}") }}],
-                                "isError": !ok
-                            })))
+                            Json(JsonRpcResponse::ok(
+                                id,
+                                json!({
+                                    "content": [{"type":"text","text": if ok { format!("✅ Done\n\n{text}") } else { format!("❌ Failed\n\n{text}") }}],
+                                    "isError": !ok
+                                }),
+                            ))
                         }
                         Err(e) => Json(JsonRpcResponse::err(id, -32000, e.to_string())),
                     }
                 }
 
                 unknown => Json(JsonRpcResponse::err(
-                    id, -32601,
+                    id,
+                    -32601,
                     format!("Unknown tool: '{unknown}'. Call tools/list to see available tools."),
                 )),
             }
         }
 
         unknown => Json(JsonRpcResponse::err(
-            id, -32601,
+            id,
+            -32601,
             format!("Method not found: '{unknown}'"),
         )),
     }
@@ -416,12 +495,8 @@ pub async fn sse_handler(
     let tools = tool_list();
     let tools_str = serde_json::to_string(&tools).unwrap_or_default();
 
-    let stream = tokio_stream::iter(vec![
-        Ok(Event::default()
-            .event("tools")
-            .data(tools_str)),
-    ])
-    .chain(tokio_stream::pending());
+    let stream = tokio_stream::iter(vec![Ok(Event::default().event("tools").data(tools_str))])
+        .chain(tokio_stream::pending());
 
     Sse::new(stream).keep_alive(KeepAlive::default())
 }

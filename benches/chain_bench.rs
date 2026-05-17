@@ -1,9 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use a1::{
     fresh_nonce, CertBuilder, Clock, DyoloChain, DyoloIdentity, DyoloPassport, Intent, IntentTree,
     MemoryNonceStore, MemoryRevocationStore, MerkleProof, NarrowingMatrix, RevocationStore,
     SubScopeProof, SystemClock,
 };
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
 fn bench_single_hop(c: &mut Criterion) {
     let human = DyoloIdentity::generate();
@@ -162,30 +162,48 @@ fn bench_authorize_batch_1024(c: &mut Criterion) {
 
 fn bench_narrowing_single_cap(c: &mut Criterion) {
     let parent = NarrowingMatrix::from_capabilities(&[
-        "trade.equity", "trade.options", "portfolio.read", "portfolio.write",
-        "audit.read", "audit.export", "risk.compute", "settlement.initiate",
+        "trade.equity",
+        "trade.options",
+        "portfolio.read",
+        "portfolio.write",
+        "audit.read",
+        "audit.export",
+        "risk.compute",
+        "settlement.initiate",
     ]);
     let child = NarrowingMatrix::from_capabilities(&["trade.equity"]);
 
-    c.bench_function("NarrowingMatrix::is_subset_of (single cap vs 8-cap parent)", |b| {
-        b.iter(|| {
-            let _ = black_box(child.is_subset_of(black_box(&parent)));
-        })
-    });
+    c.bench_function(
+        "NarrowingMatrix::is_subset_of (single cap vs 8-cap parent)",
+        |b| {
+            b.iter(|| {
+                let _ = black_box(child.is_subset_of(black_box(&parent)));
+            })
+        },
+    );
 }
 
 fn bench_narrowing_enforce(c: &mut Criterion) {
     let parent = NarrowingMatrix::from_capabilities(&[
-        "trade.equity", "trade.options", "portfolio.read", "portfolio.write",
-        "audit.read", "audit.export", "risk.compute", "settlement.initiate",
+        "trade.equity",
+        "trade.options",
+        "portfolio.read",
+        "portfolio.write",
+        "audit.read",
+        "audit.export",
+        "risk.compute",
+        "settlement.initiate",
     ]);
     let child = NarrowingMatrix::from_capabilities(&["trade.equity", "portfolio.read"]);
 
-    c.bench_function("NarrowingMatrix::enforce_narrowing (2-cap subset of 8-cap)", |b| {
-        b.iter(|| {
-            let _ = black_box(child.enforce_narrowing(black_box(&parent)));
-        })
-    });
+    c.bench_function(
+        "NarrowingMatrix::enforce_narrowing (2-cap subset of 8-cap)",
+        |b| {
+            b.iter(|| {
+                let _ = black_box(child.enforce_narrowing(black_box(&parent)));
+            })
+        },
+    );
 }
 
 fn bench_narrowing_from_capabilities(c: &mut Criterion) {
@@ -203,30 +221,40 @@ fn bench_narrowing_from_capabilities(c: &mut Criterion) {
 }
 
 fn bench_narrowing_commitment(c: &mut Criterion) {
-    let mask = NarrowingMatrix::from_capabilities(&[
-        "trade.equity", "portfolio.read", "audit.read",
-    ]);
+    let mask =
+        NarrowingMatrix::from_capabilities(&["trade.equity", "portfolio.read", "audit.read"]);
 
-    c.bench_function("NarrowingMatrix::commitment (Blake3 over 32-byte mask)", |b| {
-        b.iter(|| {
-            let _ = black_box(mask.commitment());
-        })
-    });
+    c.bench_function(
+        "NarrowingMatrix::commitment (Blake3 over 32-byte mask)",
+        |b| {
+            b.iter(|| {
+                let _ = black_box(mask.commitment());
+            })
+        },
+    );
 }
 
 fn bench_narrowing_intersect(c: &mut Criterion) {
     let a = NarrowingMatrix::from_capabilities(&[
-        "trade.equity", "portfolio.read", "audit.read", "risk.compute",
+        "trade.equity",
+        "portfolio.read",
+        "audit.read",
+        "risk.compute",
     ]);
     let b_mask = NarrowingMatrix::from_capabilities(&[
-        "trade.equity", "settlement.initiate", "audit.export",
+        "trade.equity",
+        "settlement.initiate",
+        "audit.export",
     ]);
 
-    c.bench_function("NarrowingMatrix::intersect (4-bit & 3-bit → common)", |b| {
-        b.iter(|| {
-            let _ = black_box(a.intersect(black_box(&b_mask)));
-        })
-    });
+    c.bench_function(
+        "NarrowingMatrix::intersect (4-bit & 3-bit → common)",
+        |b| {
+            b.iter(|| {
+                let _ = black_box(a.intersect(black_box(&b_mask)));
+            })
+        },
+    );
 }
 
 // ── DyoloPassport benchmarks ──────────────────────────────────────────────────
@@ -234,7 +262,12 @@ fn bench_narrowing_intersect(c: &mut Criterion) {
 fn bench_passport_issue(c: &mut Criterion) {
     let root = DyoloIdentity::generate();
     let clock = SystemClock;
-    let caps = ["trade.equity", "portfolio.read", "audit.read", "risk.compute"];
+    let caps = [
+        "trade.equity",
+        "portfolio.read",
+        "audit.read",
+        "risk.compute",
+    ];
 
     c.bench_function("DyoloPassport::issue (4 capabilities)", |b| {
         b.iter(|| {
@@ -258,7 +291,12 @@ fn bench_passport_issue_sub(c: &mut Criterion) {
     let clock = SystemClock;
     let passport = DyoloPassport::issue(
         "bench-agent",
-        &["trade.equity", "portfolio.read", "audit.read", "risk.compute"],
+        &[
+            "trade.equity",
+            "portfolio.read",
+            "audit.read",
+            "risk.compute",
+        ],
         86400,
         &root,
         &clock,
@@ -295,25 +333,34 @@ fn bench_passport_guard_local(c: &mut Criterion) {
     )
     .unwrap();
     let sub = passport
-        .issue_sub(agent.verifying_key(), &["trade.equity"], 3600, &root, &clock)
+        .issue_sub(
+            agent.verifying_key(),
+            &["trade.equity"],
+            3600,
+            &root,
+            &clock,
+        )
         .unwrap();
     let mut chain = passport.new_chain().unwrap();
     chain.push(sub);
     let intent = Intent::new("trade.equity").unwrap();
 
-    c.bench_function("DyoloPassport::guard_local (end-to-end authorization)", |b| {
-        b.iter(|| {
-            let _ = black_box(
-                passport
-                    .guard_local(
-                        black_box(&chain),
-                        black_box(&agent.verifying_key()),
-                        black_box(&intent),
-                    )
-                    .unwrap(),
-            );
-        })
-    });
+    c.bench_function(
+        "DyoloPassport::guard_local (end-to-end authorization)",
+        |b| {
+            b.iter(|| {
+                let _ = black_box(
+                    passport
+                        .guard_local(
+                            black_box(&chain),
+                            black_box(&agent.verifying_key()),
+                            black_box(&intent),
+                        )
+                        .unwrap(),
+                );
+            })
+        },
+    );
 }
 
 criterion_group!(

@@ -34,24 +34,150 @@ pub struct AgentEndpoint {
 // Common ports and endpoints for known agents
 const AGENT_PROBES: &[(&str, &str, u16, &str, &str, &str)] = &[
     // (agent_id, name, port, health_path, chat_path, api_style)
-    ("openclaw",     "OpenClaw",          3000, "/health",  "/api/chat",            "openclaw"),
-    ("openclaw",     "OpenClaw",          3001, "/health",  "/api/chat",            "openclaw"),
-    ("ironclaw",     "IronClaw",          4000, "/healthz", "/api/v1/chat",         "ironclaw"),
-    ("ironclaw",     "IronClaw",          4001, "/healthz", "/api/v1/chat",         "ironclaw"),
-    ("claude_code",  "Claude Code",       8181, "/health",  "/messages",            "anthropic"),
-    ("openai_agents","OpenAI Agents SDK", 8000, "/health",  "/v1/chat/completions", "openai"),
-    ("openai_agents","OpenAI Agents SDK", 8001, "/health",  "/v1/chat/completions", "openai"),
-    ("openai",       "OpenAI Agent",      8000, "/health",  "/v1/chat/completions", "openai"),
-    ("langchain",    "LangChain Agent",   7860, "/health",  "/chat",                "generic"),
-    ("langchain",    "LangChain Agent",   7861, "/health",  "/chat",                "generic"),
-    ("crewai",       "CrewAI Agent",      7862, "/health",  "/chat",                "generic"),
-    ("crewai",       "CrewAI Agent",      7863, "/health",  "/chat",                "generic"),
-    ("autogen",      "AutoGen Agent",     7864, "/health",  "/chat",                "generic"),
-    ("ollama",       "Ollama",            11434, "/api/tags", "/api/chat",          "generic"),
-    ("custom",       "Custom Agent",      5000, "/health",  "/chat",                "generic"),
-    ("custom",       "Custom Agent",      5001, "/health",  "/v1/chat",             "generic"),
-    ("custom",       "Custom Agent",      8888, "/health",  "/chat",                "generic"),
-    ("custom",       "Custom Agent",      9000, "/health",  "/chat",                "generic"),
+    (
+        "openclaw",
+        "OpenClaw",
+        3000,
+        "/health",
+        "/api/chat",
+        "openclaw",
+    ),
+    (
+        "openclaw",
+        "OpenClaw",
+        3001,
+        "/health",
+        "/api/chat",
+        "openclaw",
+    ),
+    (
+        "ironclaw",
+        "IronClaw",
+        4000,
+        "/healthz",
+        "/api/v1/chat",
+        "ironclaw",
+    ),
+    (
+        "ironclaw",
+        "IronClaw",
+        4001,
+        "/healthz",
+        "/api/v1/chat",
+        "ironclaw",
+    ),
+    (
+        "claude_code",
+        "Claude Code",
+        8181,
+        "/health",
+        "/messages",
+        "anthropic",
+    ),
+    (
+        "openai_agents",
+        "OpenAI Agents SDK",
+        8000,
+        "/health",
+        "/v1/chat/completions",
+        "openai",
+    ),
+    (
+        "openai_agents",
+        "OpenAI Agents SDK",
+        8001,
+        "/health",
+        "/v1/chat/completions",
+        "openai",
+    ),
+    (
+        "openai",
+        "OpenAI Agent",
+        8000,
+        "/health",
+        "/v1/chat/completions",
+        "openai",
+    ),
+    (
+        "langchain",
+        "LangChain Agent",
+        7860,
+        "/health",
+        "/chat",
+        "generic",
+    ),
+    (
+        "langchain",
+        "LangChain Agent",
+        7861,
+        "/health",
+        "/chat",
+        "generic",
+    ),
+    (
+        "crewai",
+        "CrewAI Agent",
+        7862,
+        "/health",
+        "/chat",
+        "generic",
+    ),
+    (
+        "crewai",
+        "CrewAI Agent",
+        7863,
+        "/health",
+        "/chat",
+        "generic",
+    ),
+    (
+        "autogen",
+        "AutoGen Agent",
+        7864,
+        "/health",
+        "/chat",
+        "generic",
+    ),
+    (
+        "ollama",
+        "Ollama",
+        11434,
+        "/api/tags",
+        "/api/chat",
+        "generic",
+    ),
+    (
+        "custom",
+        "Custom Agent",
+        5000,
+        "/health",
+        "/chat",
+        "generic",
+    ),
+    (
+        "custom",
+        "Custom Agent",
+        5001,
+        "/health",
+        "/v1/chat",
+        "generic",
+    ),
+    (
+        "custom",
+        "Custom Agent",
+        8888,
+        "/health",
+        "/chat",
+        "generic",
+    ),
+    (
+        "custom",
+        "Custom Agent",
+        9000,
+        "/health",
+        "/chat",
+        "generic",
+    ),
 ];
 
 // ─── POST /v1/agents/probe ───────────────────────────────────────────────────
@@ -96,14 +222,17 @@ pub async fn probe_handler(
 
         match client.get(&health_url).send().await {
             Ok(resp) if resp.status().is_success() || resp.status().as_u16() < 500 => {
-                let version = resp
-                    .json::<Value>()
-                    .await
-                    .ok()
-                    .and_then(|v| v.get("version").and_then(|v| v.as_str()).map(str::to_string));
+                let version = resp.json::<Value>().await.ok().and_then(|v| {
+                    v.get("version")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string)
+                });
 
                 // Avoid duplicates (same port, same agent)
-                if !found.iter().any(|e: &AgentEndpoint| e.port == port && e.agent_id == aid) {
+                if !found
+                    .iter()
+                    .any(|e: &AgentEndpoint| e.port == port && e.agent_id == aid)
+                {
                     found.push(AgentEndpoint {
                         agent_id: aid.to_string(),
                         name: name.to_string(),
@@ -147,7 +276,10 @@ pub async fn probe_handler(
         }
     }
 
-    Json(ProbeResponse { found, checked_count: checked })
+    Json(ProbeResponse {
+        found,
+        checked_count: checked,
+    })
 }
 
 // ─── POST /v1/agents/relay ───────────────────────────────────────────────────
@@ -191,7 +323,9 @@ pub async fn relay_handler(
             success: false,
             reply: None,
             raw: None,
-            error: Some(format!("Security: only localhost targets allowed. Got: {url}")),
+            error: Some(format!(
+                "Security: only localhost targets allowed. Got: {url}"
+            )),
             latency_ms: 0,
         });
     }
@@ -289,7 +423,11 @@ pub async fn relay_handler(
                         success: status.is_success(),
                         reply,
                         raw: Some(raw),
-                        error: if status.is_success() { None } else { Some(format!("HTTP {status}")) },
+                        error: if status.is_success() {
+                            None
+                        } else {
+                            Some(format!("HTTP {status}"))
+                        },
                         latency_ms: latency,
                     })
                 }
@@ -300,19 +438,29 @@ pub async fn relay_handler(
 
 fn extract_reply(raw: &Value, style: &str) -> Option<String> {
     match style {
-        "openclaw" => raw.get("reply").or_else(|| raw.get("message"))
-            .and_then(|v| v.as_str()).map(str::to_string),
-        "ironclaw" => raw.get("response").or_else(|| raw.get("output"))
-            .and_then(|v| v.as_str()).map(str::to_string),
-        "openai" => raw.get("choices")
+        "openclaw" => raw
+            .get("reply")
+            .or_else(|| raw.get("message"))
+            .and_then(|v| v.as_str())
+            .map(str::to_string),
+        "ironclaw" => raw
+            .get("response")
+            .or_else(|| raw.get("output"))
+            .and_then(|v| v.as_str())
+            .map(str::to_string),
+        "openai" => raw
+            .get("choices")
             .and_then(|c| c.get(0))
             .and_then(|c| c.get("message"))
             .and_then(|m| m.get("content"))
-            .and_then(|v| v.as_str()).map(str::to_string),
-        "anthropic" => raw.get("content")
+            .and_then(|v| v.as_str())
+            .map(str::to_string),
+        "anthropic" => raw
+            .get("content")
             .and_then(|c| c.get(0))
             .and_then(|c| c.get("text"))
-            .and_then(|v| v.as_str()).map(str::to_string),
+            .and_then(|v| v.as_str())
+            .map(str::to_string),
         _ => {
             // Try common response field names
             for field in ["reply", "response", "output", "message", "text", "content"] {
@@ -325,7 +473,8 @@ fn extract_reply(raw: &Value, style: &str) -> Option<String> {
                 .and_then(|c| c.get(0))
                 .and_then(|c| c.get("message"))
                 .and_then(|m| m.get("content"))
-                .and_then(|v| v.as_str()).map(str::to_string)
+                .and_then(|v| v.as_str())
+                .map(str::to_string)
         }
     }
 }
@@ -394,7 +543,14 @@ pub async fn integration_check_handler(
                         method: "mcp_json".into(),
                         config_path: Some(path.clone()),
                         auth_test_passed: auth_ok,
-                        details: format!("Found .mcp.json at {path} pointing to A1 gateway. Auth test: {}", if auth_ok { "passed" } else { "failed (gateway may be starting)" }),
+                        details: format!(
+                            "Found .mcp.json at {path} pointing to A1 gateway. Auth test: {}",
+                            if auth_ok {
+                                "passed"
+                            } else {
+                                "failed (gateway may be starting)"
+                            }
+                        ),
                     });
                 }
             }
@@ -424,6 +580,9 @@ pub async fn integration_check_handler(
         method: "none".into(),
         config_path: None,
         auth_test_passed: false,
-        details: format!("No A1 integration config found for agent '{}'. Check .mcp.json or a1_plugin.toml.", q.agent_id),
+        details: format!(
+            "No A1 integration config found for agent '{}'. Check .mcp.json or a1_plugin.toml.",
+            q.agent_id
+        ),
     })
 }

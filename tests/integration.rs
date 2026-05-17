@@ -689,9 +689,7 @@ mod proptests {
 
 #[cfg(test)]
 mod passport_tests {
-    use a1::{
-        DyoloIdentity, DyoloPassport, Intent, NarrowingMatrix, SystemClock,
-    };
+    use a1::{DyoloIdentity, DyoloPassport, Intent, NarrowingMatrix, SystemClock};
 
     fn make_passport(namespace: &str, caps: &[&str]) -> (DyoloIdentity, DyoloPassport) {
         let root = DyoloIdentity::generate();
@@ -722,7 +720,13 @@ mod passport_tests {
         let (root, passport) = make_passport("bot", &["trade.equity", "portfolio.read"]);
         let agent = DyoloIdentity::generate();
         let clock = SystemClock;
-        let sub = passport.issue_sub(agent.verifying_key(), &["trade.equity"], 1800, &root, &clock);
+        let sub = passport.issue_sub(
+            agent.verifying_key(),
+            &["trade.equity"],
+            1800,
+            &root,
+            &clock,
+        );
         assert!(sub.is_ok(), "valid subset should be accepted");
     }
 
@@ -731,8 +735,13 @@ mod passport_tests {
         let (root, passport) = make_passport("bot", &["portfolio.read"]);
         let agent = DyoloIdentity::generate();
         let clock = SystemClock;
-        let result =
-            passport.issue_sub(agent.verifying_key(), &["trade.equity"], 1800, &root, &clock);
+        let result = passport.issue_sub(
+            agent.verifying_key(),
+            &["trade.equity"],
+            1800,
+            &root,
+            &clock,
+        );
         assert!(result.is_err(), "capability escalation must be rejected");
     }
 
@@ -786,7 +795,9 @@ mod passport_tests {
 
         let intent = Intent::new("trade.equity").unwrap();
         assert!(
-            passport.guard_local(&chain, &agent.verifying_key(), &intent).is_err(),
+            passport
+                .guard_local(&chain, &agent.verifying_key(), &intent)
+                .is_err(),
             "out-of-scope intent must be rejected"
         );
     }

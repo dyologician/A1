@@ -4,7 +4,7 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 
 use a1::{
-    anchor::{AnchoredReceipt, AnchorNetwork},
+    anchor::{AnchorNetwork, AnchoredReceipt},
     zk::ZkChainCommitment,
     Clock, SystemClock,
 };
@@ -104,7 +104,8 @@ pub async fn handler(
         solana_instruction_data: solana_data,
         submission_guide: SubmissionGuide {
             contract_function: "anchor(bytes32,bytes32,uint64,string)",
-            contract_interface: "https://github.com/dyologician/a1/blob/main/contracts/IA1Anchor.sol",
+            contract_interface:
+                "https://github.com/dyologician/a1/blob/main/contracts/IA1Anchor.sol",
             ethersjs_snippet: ethersjs,
             viemjs_snippet: viemjs,
         },
