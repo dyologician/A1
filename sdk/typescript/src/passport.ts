@@ -32,8 +32,9 @@ export interface PassportReceipt {
 
 export interface AuthorizePassportRequest {
   chain: unknown;
-  intent_name: string;
-  executor_pk_hex: string;
+  intentName: string;
+  executorPkHex: string;
+  intentParams?: Record<string, string>;
   intent_params?: Record<string, unknown>;
 }
 
@@ -99,9 +100,9 @@ export class PassportClient {
         headers: this.headers,
         body: JSON.stringify({
           chain: req.chain,
-          intent_name: req.intent_name,
-          executor_pk_hex: req.executor_pk_hex,
-          intent_params: req.intent_params ?? {},
+          intent_name: req.intentName,
+          executor_pk_hex: req.executorPkHex,
+          intent_params: req.intentParams ?? {},
         }),
         signal: controller.signal,
       });
@@ -180,8 +181,8 @@ export function withA1Passport<T extends Record<string, unknown>, R>(
 
     await client.authorize({
       chain,
-      intent_name: capability,
-      executor_pk_hex: executorPkHex,
+      intentName: capability,
+      executorPkHex,
     });
 
     return fn(args);

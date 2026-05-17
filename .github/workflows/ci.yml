@@ -108,7 +108,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Run Jest
-        run: npx jest --passWithNoTests
+        run: npx jest --passWithNoTests --forceExit 2>&1
 
       - name: Build (ESM + CJS)
         run: npm run build
