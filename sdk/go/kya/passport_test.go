@@ -162,7 +162,7 @@ func TestWithPassport_SuccessCallsWrappedFn(t *testing.T) {
 	client := New(srv.URL)
 	called := false
 
-	guardedFn := WithPassport(client, func(ctx context.Context, args tradeArgs) (string, error) {
+	guardedFn := WithA1Passport(client, func(ctx context.Context, args tradeArgs) (string, error) {
 		called = true
 		return "filled", nil
 	}, PassportOptions{Capability: "trade.equity"})
@@ -190,7 +190,7 @@ func TestWithPassport_AuthFailureBlocksWrappedFn(t *testing.T) {
 	client := New(srv.URL)
 	called := false
 
-	guardedFn := WithPassport(client, func(ctx context.Context, args tradeArgs) (string, error) {
+	guardedFn := WithA1Passport(client, func(ctx context.Context, args tradeArgs) (string, error) {
 		called = true
 		return "should-not-run", nil
 	}, PassportOptions{Capability: "trade.equity"})
@@ -218,7 +218,7 @@ func TestWithPassport_MissingChainField(t *testing.T) {
 		Symbol string `json:"symbol"`
 	}
 
-	guardedFn := WithPassport(client, func(ctx context.Context, args noChainArgs) (string, error) {
+	guardedFn := WithA1Passport(client, func(ctx context.Context, args noChainArgs) (string, error) {
 		return "ok", nil
 	}, PassportOptions{Capability: "trade.equity"})
 
@@ -247,7 +247,7 @@ func TestWithPassport_CustomFieldNames(t *testing.T) {
 	client := New(srv.URL)
 	called := false
 
-	guardedFn := WithPassport(client, func(ctx context.Context, args customArgs) (string, error) {
+	guardedFn := WithA1Passport(client, func(ctx context.Context, args customArgs) (string, error) {
 		called = true
 		return "ok", nil
 	}, PassportOptions{

@@ -443,11 +443,12 @@ export function withDyoloLangGraphNode<TState extends Record<string, unknown>>(
     const auth = await opts.client.authorize({
       chain: ctx.chain,
       executorPkHex: ctx.executorPkHex,
-      intent: { name: opts.intentName, params: ctx.intentParams },
+      intentName: opts.intentName,
+      intentParams: ctx.intentParams,
     });
     if (!auth.authorized) {
       throw new A1Error(
-        `LangGraph node '${opts.intentName}' authorization denied: ${auth.reason ?? "unknown"}`,
+        `LangGraph node '${opts.intentName}' authorization denied: ${"authorization denied"}`,
       );
     }
     return opts.node(state, auth);
@@ -483,11 +484,12 @@ export function withDyoloSkFunction<TArgs extends Record<string, unknown>, TRetu
     const auth = await opts.client.authorize({
       chain: ctx.chain,
       executorPkHex: ctx.executorPkHex,
-      intent: { name: opts.intentName, params: ctx.intentParams },
+      intentName: opts.intentName,
+      intentParams: ctx.intentParams,
     });
     if (!auth.authorized) {
       throw new A1Error(
-        `Semantic Kernel function '${opts.intentName}' authorization denied: ${auth.reason ?? "unknown"}`,
+        `Semantic Kernel function '${opts.intentName}' authorization denied: ${"authorization denied"}`,
       );
     }
     return opts.fn(args, auth);

@@ -148,7 +148,7 @@ export class A1Middleware {
         });
 
         // Attach receipt for downstream handlers
-        (req as Record<string, unknown>)["a1"] = result.receipt;
+        (req as Record<string, unknown>)["a1"] = result;
 
         next();
       } catch (err: unknown) {
