@@ -11,7 +11,7 @@ Run the gateway first:
 
 Install:
 
-    pip install a1 pyautogen
+    pip install a1identity pyautogen
 """
 from __future__ import annotations
 

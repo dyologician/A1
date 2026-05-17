@@ -5,7 +5,7 @@ OpenAI Agents SDK + a1 passport guard.
 
 Prerequisites
 -------------
-pip install a1 openai
+pip install a1identity openai
 
 Set environment variables:
     OPENAI_API_KEY=...

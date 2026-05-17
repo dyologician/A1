@@ -671,7 +671,7 @@ class AsyncA1Client:
 
         Signs a capability request with the caller's Ed25519 private key and
         submits it to ``/v1/negotiate``. Requires the ``cryptography`` and
-        ``blake3`` packages (install with ``pip install a1[all]``).
+        ``blake3`` packages (install with ``pip install a1identity[all]``).
         """
         import os as _os
         import time as _time

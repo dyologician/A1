@@ -23,13 +23,11 @@ pub struct AiStatusResponse {
 pub async fn status_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
     let key = std::env::var("A1_AI_KEY").unwrap_or_default();
     let available = key.starts_with("sk-ant-");
+    let model = std::env::var("A1_AI_MODEL")
+        .unwrap_or_else(|_| "claude-sonnet-4-20250514".into());
     Json(AiStatusResponse {
         available,
-        model: if available {
-            "claude-sonnet-4-20250514".into()
-        } else {
-            String::new()
-        },
+        model: if available { model } else { String::new() },
         note: if available {
             "Gateway AI proxy is active. No user API key required.".into()
         } else {
@@ -70,8 +68,11 @@ pub async fn chat_handler(
         ).into_response(),
     };
 
+    let model = std::env::var("A1_AI_MODEL")
+        .unwrap_or_else(|_| "claude-sonnet-4-20250514".into());
+
     let mut body = serde_json::json!({
-        "model": "claude-sonnet-4-20250514",
+        "model": model,
         "max_tokens": req.max_tokens,
         "messages": req.messages,
     });

@@ -41,6 +41,7 @@ services:
 
       # ── AI proxy ──────────────────────────────────────────────────────────────
       A1_AI_KEY:              ${A1_AI_KEY:-}
+      A1_AI_MODEL:            ${A1_AI_MODEL:-claude-sonnet-4-20250514}
 
       # ── Observability ─────────────────────────────────────────────────────────
       RUST_LOG:               ${RUST_LOG:-a1_gateway=info,tower_http=info}

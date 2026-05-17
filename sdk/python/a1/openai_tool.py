@@ -4,7 +4,7 @@ OpenAI Assistants integration for a1.
 These helpers gate tool execution behind a cryptographic authorization check
 without changing the tool's interface or the agent framework's calling convention.
 
-Requires: ``pip install a1[openai]``
+Requires: ``pip install a1identity[openai]``
 
 OpenAI function-calling example::
 

@@ -5,7 +5,7 @@ End-to-end example: protect a LangChain tool with a1 passport guards.
 
 Prerequisites
 -------------
-pip install a1[langchain] langchain-openai
+pip install a1identity[langchain] langchain-openai
 
 Set environment variables:
     OPENAI_API_KEY=...
@@ -114,7 +114,7 @@ def make_langchain_tools() -> list:
             ),
         ]
     except ImportError:
-        print("langchain not installed — run: pip install a1[langchain]")
+        print("langchain not installed — run: pip install a1identity[langchain]")
         return []
 
 

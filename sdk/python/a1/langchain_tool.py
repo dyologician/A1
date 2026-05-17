@@ -5,7 +5,7 @@ Wraps any LangChain tool with an a1 authorization check.
 The tool's ``invoke`` method is only called after the delegation chain
 has been cryptographically verified against the gateway.
 
-Requires: ``pip install a1[langchain]``
+Requires: ``pip install a1identity[langchain]``
 
 Example::
 

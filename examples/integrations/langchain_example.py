@@ -8,7 +8,7 @@ a1 authorization.  Run the gateway first:
 
 Install deps:
 
-    pip install a1 langchain langchain-openai
+    pip install a1identity langchain langchain-openai
 """
 from __future__ import annotations
 

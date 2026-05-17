@@ -803,6 +803,8 @@ All numbers are approximate. Run `cargo bench` for exact figures on your target 
 | `A1_PUBLIC_BASE_URL` | `http://localhost:8080` | Used in `.well-known` discovery document |
 | `A1_TRUSTED_PROXY_MODE` | *(none)* | `x-forwarded-for`, `fly-client-ip`, or `cf-connecting-ip` |
 | `RUST_LOG` | `a1_gateway=info` | Log filter (e.g. `a1_gateway=debug,a1=trace`) |
+| `A1_AI_KEY` | *(none)* | Anthropic API key (`sk-ant-…`) — enables the Studio AI assistant proxy |
+| `A1_AI_MODEL` | `claude-sonnet-4-20250514` | Model used by the Studio AI assistant proxy |
 
 ---
 
