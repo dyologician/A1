@@ -20,11 +20,12 @@ const SAMPLE_RECEIPT: PassportReceipt = {
 const WRAPPED_RECEIPT = { receipt: SAMPLE_RECEIPT };
 
 function mockFetch(response: object, status = 200): typeof globalThis.fetch {
-  return jest.fn().mockResolvedValue({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (jest.fn() as any).mockResolvedValue({
     ok: status < 400,
     status,
     json: async () => response,
-  } as Response);
+  }) as unknown as typeof globalThis.fetch;
 }
 
 // ── PassportClient ────────────────────────────────────────────────────────────
@@ -79,11 +80,12 @@ describe("PassportClient.authorize", () => {
   });
 
   it("throws PassportError on non-200 with no JSON body", async () => {
-    globalThis.fetch = jest.fn().mockResolvedValue({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.fetch = (jest.fn() as any).mockResolvedValue({
       ok: false,
       status: 503,
       json: async () => { throw new Error("not json"); },
-    } as unknown as Response);
+    }) as unknown as typeof globalThis.fetch;
 
     await expect(
       client.authorize({ chain: {}, intent_name: "trade.equity", executor_pk_hex: "" })
@@ -92,10 +94,11 @@ describe("PassportClient.authorize", () => {
 
   it("includes intent_params in the request body when provided", async () => {
     let captured: unknown;
-    globalThis.fetch = jest.fn().mockImplementation(async (_url: unknown, init: RequestInit) => {
-      captured = JSON.parse(init.body as string);
-      return { ok: true, status: 200, json: async () => WRAPPED_RECEIPT } as Response;
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.fetch = (jest.fn() as any).mockImplementation(async (_url: unknown, init: unknown) => {
+      captured = JSON.parse((init as RequestInit).body as string);
+      return { ok: true, status: 200, json: async () => WRAPPED_RECEIPT };
+    }) as unknown as typeof globalThis.fetch;
 
     await client.authorize({
       chain: {},
@@ -205,10 +208,11 @@ describe("withA1Passport", () => {
 
   it("respects custom chainKey and executorKey options", async () => {
     let capturedChain: unknown;
-    globalThis.fetch = jest.fn().mockImplementation(async (_url: unknown, init: RequestInit) => {
-      capturedChain = JSON.parse(init.body as string);
-      return { ok: true, status: 200, json: async () => WRAPPED_RECEIPT } as Response;
-    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.fetch = (jest.fn() as any).mockImplementation(async (_url: unknown, init: unknown) => {
+      capturedChain = JSON.parse((init as RequestInit).body as string);
+      return { ok: true, status: 200, json: async () => WRAPPED_RECEIPT };
+    }) as unknown as typeof globalThis.fetch;
 
     const client = new PassportClient("http://localhost:8080");
 

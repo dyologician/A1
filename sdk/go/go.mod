@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
-	golang.org/x/crypto v0.22.0
+	golang.org/x/crypto v0.45.0
 )
 
 require (
