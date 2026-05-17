@@ -435,7 +435,9 @@ mod tests {
 
         let narrowing = [0u8; 32];
         let commitment = ZkChainCommitment::seal(&chain, &intent, &narrowing, now, &human, None);
-        assert!(commitment.verify_commitment(&narrowing, now + 7200, Some(3600)).is_err());
+        assert!(commitment
+            .verify_commitment(&narrowing, now + 7200, Some(3600))
+            .is_err());
     }
 
     #[test]
