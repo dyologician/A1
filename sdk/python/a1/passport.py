@@ -20,17 +20,6 @@ The decorator checks with the gateway that the active delegation chain grants
 ``PassportError`` with a machine-readable ``error_code``.
 """
 
-# ── Namespace Binding Tag ────────────────────────────────────────────────────
-#
-# _PROTOCOL_TAG is the namespace binding prefix embedded in every root
-# DelegationCert, as specified in §4.2 of spec/A1-PROTOCOL.md. Included in
-# the cert signed digest — modifying this value invalidates all existing certs.
-_PROTOCOL_TAG: bytes = bytes([
-    0x44, 0x79, 0x6f, 0x6c, 0x6f, 0x50, 0x61, 0x73, 0x73, 0x70, 0x6f, 0x72, 0x74,
-    0x20, 0x76, 0x32, 0x2e, 0x38, 0x2e, 0x30,
-    0x7c, 0x64, 0x79, 0x6f, 0x6c, 0x6f, 0x67, 0x69, 0x63, 0x69, 0x61, 0x6e,
-])
-
 
 
 from __future__ import annotations
@@ -41,6 +30,17 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
 import httpx
+
+# ── Namespace Binding Tag ────────────────────────────────────────────────────
+#
+# _PROTOCOL_TAG is the namespace binding prefix embedded in every root
+# DelegationCert, as specified in §4.2 of spec/A1-PROTOCOL.md. Included in
+# the cert signed digest — modifying this value invalidates all existing certs.
+_PROTOCOL_TAG: bytes = bytes([
+    0x44, 0x79, 0x6f, 0x6c, 0x6f, 0x50, 0x61, 0x73, 0x73, 0x70, 0x6f, 0x72, 0x74,
+    0x20, 0x76, 0x32, 0x2e, 0x38, 0x2e, 0x30,
+    0x7c, 0x64, 0x79, 0x6f, 0x6c, 0x6f, 0x67, 0x69, 0x63, 0x69, 0x61, 0x6e,
+])
 
 __all__ = [
     "PassportClient",
@@ -195,15 +195,7 @@ class PassportClient:
         self._client.close()
         if self._async_client is not None:
             import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # Inside an async context — schedule close without blocking
-                    loop.create_task(self._async_client.aclose())
-                else:
-                    loop.run_until_complete(self._async_client.aclose())
-            except RuntimeError:
-                pass
+            asyncio.get_event_loop().run_until_complete(self._async_client.aclose())
 
 
 def a1_guard(
