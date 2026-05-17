@@ -22,7 +22,7 @@ No Rust toolchain required — this SDK communicates with the self-hosted A1 gat
 ## Installation
 
 ```bash
-npm install a1
+npm install a1-ai
 ```
 
 ---
@@ -57,7 +57,7 @@ a1 passport issue \
 ### 3. Create a client and authorize an action
 
 ```typescript
-import { A1Client } from "a1";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -87,7 +87,7 @@ const cert = await client.issueCert({
 ### 5. Guard a function with `withA1Passport`
 
 ```typescript
-import { withA1Passport, PassportClient } from "a1/passport";
+import { withA1Passport, PassportClient } from "a1-ai/passport";
 
 const client = new PassportClient({
   gatewayUrl: "http://localhost:8080",
@@ -122,7 +122,7 @@ Add to your `.mcp.json` (or Claude Code / Cursor settings):
 ```json
 {
   "mcpServers": {
-    "a1": {
+    "a1-ai": {
       "type": "http",
       "url": "http://localhost:8080/mcp"
     }
@@ -147,8 +147,8 @@ Import from `"a1/integrations"`:
 ### LangChain.js
 
 ```typescript
-import { buildLangChainA1Tool } from "a1/integrations";
-import { A1Client } from "a1";
+import { buildLangChainA1Tool } from "a1-ai/integrations";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -170,8 +170,8 @@ const tradeTool = buildLangChainA1Tool({
 ### LangGraph.js
 
 ```typescript
-import { withDyoloLangGraphNode } from "a1/integrations";
-import { A1Client } from "a1";
+import { withDyoloLangGraphNode } from "a1-ai/integrations";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -194,8 +194,8 @@ const guardedNode = withDyoloLangGraphNode(
 ### Semantic Kernel (JS)
 
 ```typescript
-import { withDyoloSkFunction } from "a1/integrations";
-import { A1Client } from "a1";
+import { withDyoloSkFunction } from "a1-ai/integrations";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -209,8 +209,8 @@ const guardedFunction = withDyoloSkFunction(executeTrade, {
 ### OpenAI Agents SDK
 
 ```typescript
-import { buildOpenAiAgentA1Tool } from "a1/integrations";
-import { A1Client } from "a1";
+import { buildOpenAiAgentA1Tool } from "a1-ai/integrations";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -231,7 +231,7 @@ const tool = buildOpenAiAgentA1Tool({
 For full passport lifecycle management:
 
 ```typescript
-import { PassportClient } from "a1/passport";
+import { PassportClient } from "a1-ai/passport";
 
 const passport = new PassportClient({
   gatewayUrl: "http://localhost:8080",
@@ -264,7 +264,7 @@ console.log(info.namespace, info.capabilities, info.expiresAt);
 Exchange an existing OIDC or SAML JWT token for a scoped A1 `DelegationCert` — no manual key ceremony required. Useful for enterprises already running SSO.
 
 ```typescript
-import { A1Client } from "a1";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -287,7 +287,7 @@ Configure the gateway with `A1_JWT_JWKS_URL` pointing at your identity provider'
 An agent can request a scoped cert from the gateway without a pre-shared chain:
 
 ```typescript
-import { A1Client } from "a1";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -305,7 +305,7 @@ const offer = await client.negotiate({
 ## Swarm Management
 
 ```typescript
-import { A1Client } from "a1";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080", {
   adminSecret: process.env.A1_ADMIN_SECRET,
@@ -346,7 +346,7 @@ const { members } = await client.listSwarmMembers(swarm.swarmId);
 Anchor a zero-knowledge chain commitment on-chain for immutable audit trails:
 
 ```typescript
-import { A1Client } from "a1";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080");
 
@@ -370,7 +370,7 @@ console.log(anchor.solanaInstructionData);
 Send `X-A1-Tenant-ID` on every request to scope all revocation and nonce operations to that tenant:
 
 ```typescript
-import { A1Client } from "a1";
+import { A1Client } from "a1-ai";
 
 const client = new A1Client("http://localhost:8080", {
   defaultHeaders: { "X-A1-Tenant-ID": "acme" },
@@ -407,7 +407,7 @@ results.forEach((r) => console.log(r.intentName, r.authorized));
 ### `A1Client`
 
 ```typescript
-import { A1Client, AuthorizeRequest, AuthorizeResult } from "a1";
+import { A1Client, AuthorizeRequest, AuthorizeResult } from "a1-ai";
 
 const client = new A1Client(
   gatewayUrl: string,
@@ -473,7 +473,7 @@ interface SignedChain {
 ## Error Handling
 
 ```typescript
-import { A1AuthorizationError, A1GatewayError } from "a1";
+import { A1AuthorizationError, A1GatewayError } from "a1-ai";
 
 try {
   const result = await client.authorize(req);
@@ -494,10 +494,10 @@ try {
 
 ```typescript
 // Main entry point
-import { A1Client, A1AuthorizationError, A1GatewayError } from "a1";
+import { A1Client, A1AuthorizationError, A1GatewayError } from "a1-ai";
 
 // Passport management + guards
-import { PassportClient, withA1Passport, PassportGuard } from "a1/passport";
+import { PassportClient, withA1Passport, PassportGuard } from "a1-ai/passport";
 
 // Framework integrations
 import {
@@ -505,10 +505,10 @@ import {
   withDyoloLangGraphNode,
   withDyoloSkFunction,
   buildOpenAiAgentA1Tool,
-} from "a1/integrations";
+} from "a1-ai/integrations";
 
 // Middleware helpers (Express, Hono, Fastify, etc.)
-import { A1Middleware, exchangeJwt, verifyWebhookSignature } from "a1/middleware";
+import { A1Middleware, exchangeJwt, verifyWebhookSignature } from "a1-ai/middleware";
 ```
 
 The package ships both ESM and CJS builds and is fully compatible with TypeScript strict mode.
@@ -522,8 +522,8 @@ The package ships both ESM and CJS builds and is fully compatible with TypeScrip
 ### `A1Middleware`
 
 ```typescript
-import { A1Middleware } from "a1/middleware";
-import { A1Client } from "a1";
+import { A1Middleware } from "a1-ai/middleware";
+import { A1Client } from "a1-ai";
 
 const middleware = new A1Middleware(new A1Client("http://localhost:8080"), {
   capability: "trade.equity",
@@ -544,7 +544,7 @@ app.use("/trade", middleware.hono());
 Exchange an existing OIDC/SAML JWT for a scoped `DelegationCert` without a manual key ceremony:
 
 ```typescript
-import { exchangeJwt } from "a1/middleware";
+import { exchangeJwt } from "a1-ai/middleware";
 
 const result = await exchangeJwt({
   gatewayUrl: "http://localhost:8080",
@@ -563,7 +563,7 @@ console.log(result.cert);  // DelegationCert ready to use
 Verify A1 gateway event payloads before processing them:
 
 ```typescript
-import { verifyWebhookSignature } from "a1/middleware";
+import { verifyWebhookSignature } from "a1-ai/middleware";
 
 app.post("/a1-events", (req, res) => {
   const event = verifyWebhookSignature(req.body, process.env.A1_WEBHOOK_SECRET);

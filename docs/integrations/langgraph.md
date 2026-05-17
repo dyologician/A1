@@ -5,7 +5,7 @@ Authorize individual graph nodes — not just the agent entry point. Each node i
 ## Install
 
 ```bash
-pip install a1 langgraph
+pip install a1identity langgraph
 ```
 
 ## Guard a node

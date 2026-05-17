@@ -57,7 +57,7 @@ In your `.mcp.json` file or Claude Code settings:
 ```json
 {
   "mcpServers": {
-    "a1": {
+    "a1-ai": {
       "url": "http://localhost:8080/mcp"
     }
   }
@@ -243,13 +243,13 @@ pip install "a1[all]"
 ## TypeScript / Node.js Frameworks
 
 ```bash
-npm install a1
+npm install a1-ai
 ```
 
 ### Any async function (one wrapper)
 
 ```typescript
-import { withA1Passport, PassportClient } from "a1/passport";
+import { withA1Passport, PassportClient } from "a1-ai/passport";
 
 const client = new PassportClient("http://localhost:8080");
 
@@ -262,7 +262,7 @@ const guardedTrade = withA1Passport(executeTrade, {
 ### Class decorator
 
 ```typescript
-import { PassportGuard } from "a1/passport";
+import { PassportGuard } from "a1-ai/passport";
 
 class TradingAgent {
   @PassportGuard({ client, capability: "trade.equity" })
@@ -275,7 +275,7 @@ class TradingAgent {
 ### Express / Next.js / Hono middleware
 
 ```typescript
-import { A1Middleware } from "a1/middleware";
+import { A1Middleware } from "a1-ai/middleware";
 
 app.use(A1Middleware({
   client,
@@ -288,7 +288,7 @@ app.use(A1Middleware({
 Exchange an existing OIDC JWT for an A1 delegation cert:
 
 ```typescript
-import { exchangeJwt } from "a1";
+import { exchangeJwt } from "a1-ai";
 
 const cert = await exchangeJwt({
   gatewayUrl: "http://localhost:8080",
@@ -302,7 +302,7 @@ const cert = await exchangeJwt({
 ### Webhook signature verification
 
 ```typescript
-import { verifyWebhookSignature } from "a1";
+import { verifyWebhookSignature } from "a1-ai";
 
 app.post("/a1-webhook", (req, res) => {
   const valid = verifyWebhookSignature(req.body, req.headers["x-a1-signature"], webhookSecret);
@@ -314,7 +314,7 @@ app.post("/a1-webhook", (req, res) => {
 ### LangGraph (TypeScript)
 
 ```typescript
-import { withDyoloLangGraphNode } from "a1/integrations";
+import { withDyoloLangGraphNode } from "a1-ai/integrations";
 
 const guardedNode = withDyoloLangGraphNode(executeTradeNode, {
   client,
@@ -325,7 +325,7 @@ const guardedNode = withDyoloLangGraphNode(executeTradeNode, {
 ### Semantic Kernel (TypeScript)
 
 ```typescript
-import { withDyoloSkFunction } from "a1/integrations";
+import { withDyoloSkFunction } from "a1-ai/integrations";
 
 const guardedFn = withDyoloSkFunction(executeTradeSkFn, {
   client,

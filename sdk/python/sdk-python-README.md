@@ -22,7 +22,7 @@ A1 gives every AI agent a verifiable passport and produces an independently veri
 **Base client:**
 
 ```bash
-pip install a1
+pip install a1identity
 ```
 
 **With framework integrations:**
@@ -128,7 +128,7 @@ Add to your `.mcp.json` (or Claude Code / Cursor settings):
 ```json
 {
   "mcpServers": {
-    "a1": {
+    "a1-ai": {
       "type": "http",
       "url": "http://localhost:8080/mcp"
     }

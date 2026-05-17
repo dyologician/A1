@@ -5,7 +5,7 @@ Every LlamaIndex tool call authorized before execution. Zero architecture change
 ## Install
 
 ```bash
-pip install a1 llama-index-core
+pip install a1identity llama-index-core
 ```
 
 ## One-line guard

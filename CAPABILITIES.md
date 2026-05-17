@@ -443,7 +443,7 @@ This allows a gradual rollout of post-quantum signing without requiring all agen
 **Install:**
 
 ```bash
-pip install a1                    # Base client
+pip install a1identity                    # Base client
 pip install "a1[langchain]"       # LangChain integration
 pip install "a1[langgraph]"       # LangGraph integration
 pip install "a1[llamaindex]"      # LlamaIndex integration
@@ -476,7 +476,7 @@ pip install "a1[all]"             # All framework integrations
 **Install:**
 
 ```bash
-npm install a1
+npm install a1-ai
 ```
 
 **Key exports (`"a1"`):**

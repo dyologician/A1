@@ -224,7 +224,7 @@ docker run -p 8080:8080 ghcr.io/dyologician/a1-gateway:2.8.0
 a1 passport issue --namespace "my-agent" --allow "read,write" --ttl 7d
 
 # Integrate in Python
-pip install a1-sdk
+pip install a1identity
 ```
 
 Full documentation: https://docs.a1.dev  

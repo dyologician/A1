@@ -6,10 +6,10 @@ Gate every OpenAI function tool call with a cryptographic authorization check.
 
 ```bash
 # Python
-pip install a1 openai
+pip install a1identity openai
 
 # TypeScript
-npm install a1 openai
+npm install a1-ai openai
 
 docker run -p 8080:8080 ghcr.io/dyologician/a1-gateway:2
 ```
@@ -45,8 +45,8 @@ runs if authorization fails.
 ## TypeScript — `buildOpenAIA1Function`
 
 ```ts
-import { A1Client, SignedChain } from "a1";
-import { buildOpenAIA1Function } from "a1/integrations";
+import { A1Client, SignedChain } from "a1-ai";
+import { buildOpenAIA1Function } from "a1-ai/integrations";
 
 const client = new A1Client("http://localhost:8080");
 const agentChain  = JSON.parse(process.env.AGENT_SIGNED_CHAIN!) as SignedChain;

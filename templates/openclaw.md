@@ -21,7 +21,7 @@ If auto-detection didn't find OpenClaw, create `.mcp.json` in your OpenClaw conf
 ```json
 {
   "mcpServers": {
-    "a1": {
+    "a1-ai": {
       "type": "http",
       "url": "http://localhost:8080/mcp",
       "description": "A1 — cryptographic agent authorization"
@@ -51,11 +51,11 @@ OpenClaw will check authorization before executing any skill you've tagged with 
 For full skill-level protection, wrap OpenClaw skill handlers with A1 using the TypeScript SDK:
 
 ```bash
-npm install a1
+npm install a1-ai
 ```
 
 ```typescript
-import { withA1Passport, PassportClient } from "a1/passport";
+import { withA1Passport, PassportClient } from "a1-ai/passport";
 
 const client = new PassportClient({
     gatewayUrl: "http://localhost:8080",

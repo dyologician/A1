@@ -25,7 +25,7 @@ Here's my setup:
 - Capabilities I need: [e.g. files.read, web.search, trade.equity]
 
 Please:
-1. Install A1: pip install a1
+1. Install A1: pip install a1identity
 2. Import and use @a1_guard on my tool functions that need authorization
 3. Set up a PassportClient pointing to http://localhost:8080
 4. Show me the integration with a working example

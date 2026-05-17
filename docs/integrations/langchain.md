@@ -5,7 +5,7 @@ Adds A1 authorization to any LangChain tool in three steps.
 ## Prerequisites
 
 ```bash
-pip install a1 langchain langchain-openai
+pip install a1identity langchain langchain-openai
 docker run -p 8080:8080 ghcr.io/dyologician/a1-gateway:2
 ```
 

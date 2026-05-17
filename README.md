@@ -126,7 +126,7 @@ async def execute_trade(symbol: str, qty: int, signed_chain: dict, executor_pk_h
 **TypeScript**
 
 ```typescript
-import { withA1Passport, PassportClient } from "a1/passport";
+import { withA1Passport, PassportClient } from "a1-ai/passport";
 
 const client = new PassportClient("http://localhost:8080");
 

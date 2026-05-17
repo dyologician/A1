@@ -222,15 +222,15 @@ go get github.com/dyologician/a1/sdk/go/a1/kya@vX.Y.Z
 
 ```bash
 # Rust
-cargo add a1@X.Y.Z --features full   # in a scratch project
+cargo add a1-ai@X.Y.Z --features full   # in a scratch project
 cargo build
 
 # Python
-pip install a1==X.Y.Z
+pip install a1identity==X.Y.Z
 python -c "import a1; print(a1.__version__)"
 
 # TypeScript
-npm install a1@X.Y.Z
+npm install a1-ai@X.Y.Z
 node -e "const a1 = require('a1'); console.log('ok')"
 
 # CLI

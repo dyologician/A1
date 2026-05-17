@@ -16,7 +16,7 @@ This guide works for any AI agent, any framework, or any language. If your agent
 ### Option 1 — Use the Python SDK (recommended for Python agents)
 
 ```bash
-pip install a1
+pip install a1identity
 ```
 
 ```python
@@ -36,11 +36,11 @@ async def my_tool(input: str, signed_chain: dict, executor_pk_hex: str) -> str:
 ### Option 2 — Use the TypeScript SDK (for Node.js / TypeScript agents)
 
 ```bash
-npm install a1
+npm install a1-ai
 ```
 
 ```typescript
-import { withA1Passport, PassportClient } from "a1/passport";
+import { withA1Passport, PassportClient } from "a1-ai/passport";
 
 const client = new PassportClient({
     gatewayUrl: "http://localhost:8080",
@@ -213,7 +213,7 @@ The `chain.json` is your `signed_chain`. Pass it with every authorization reques
 | CrewAI | `pip install "a1[crewai]"` | [templates/crewai.md](crewai.md) |
 | OpenAI Agents | `pip install "a1[openai]"` | [templates/openai-agents.md](openai-agents.md) |
 | Claude Code | Prompt-based | [templates/claude-code.md](claude-code.md) |
-| TypeScript | `npm install a1` | [sdk/typescript/README.md](../sdk/typescript/README.md) |
+| TypeScript | `npm install a1-ai` | [sdk/typescript/README.md](../sdk/typescript/README.md) |
 | Go | `go get github.com/dyologician/a1/sdk/go/a1` | [sdk/go/README.md](../sdk/go/README.md) |
 
 ---

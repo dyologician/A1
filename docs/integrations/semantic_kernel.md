@@ -5,7 +5,7 @@ Guards every `KernelFunction` so that unauthorized capabilities are rejected bef
 ## Install
 
 ```bash
-pip install a1 semantic-kernel
+pip install a1identity semantic-kernel
 ```
 
 ## Guard a kernel function
@@ -38,7 +38,7 @@ kernel.add_plugin(guarded_plugin, plugin_name="Trading")
 ## TypeScript
 
 ```ts
-import { withDyoloSkFunction } from "a1";
+import { withDyoloSkFunction } from "a1-ai";
 
 const guardedExecuteTrade = withDyoloSkFunction({
   intentName: "trade.equity",
