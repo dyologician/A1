@@ -478,63 +478,65 @@ mod tests {
     }
 }
 
-    #[test]
-    fn zk_trace_proof_seal_verify() {
-        use crate::{
-            identity::DyoloIdentity,
-            intent::Intent,
-            cert::CertBuilder,
-            provenance::{ReasoningTrace, ReasoningStepKind},
-        };
+#[test]
+fn zk_trace_proof_seal_verify() {
+    use crate::{
+        cert::CertBuilder,
+        identity::DyoloIdentity,
+        intent::Intent,
+        provenance::{ReasoningStepKind, ReasoningTrace},
+    };
 
-        let human = DyoloIdentity::generate();
-        let agent = DyoloIdentity::generate();
-        let now = 1_700_000_000u64;
-        let intent = Intent::new("trade.equity").unwrap().hash();
-        let cert = CertBuilder::new(agent.verifying_key(), intent, now, now + 3600)
-            .sign(&human);
-        let mut chain = DyoloChain::new(human.verifying_key(), intent);
-        chain.push(cert);
+    let human = DyoloIdentity::generate();
+    let agent = DyoloIdentity::generate();
+    let now = 1_700_000_000u64;
+    let intent = Intent::new("trade.equity").unwrap().hash();
+    let cert = CertBuilder::new(agent.verifying_key(), intent, now, now + 3600).sign(&human);
+    let mut chain = DyoloChain::new(human.verifying_key(), intent);
+    chain.push(cert);
 
-        let narrowing = [0u8; 32];
-        let chain_fp = chain.fingerprint();
-        let commitment = ZkChainCommitment::seal(&chain, &intent, &narrowing, now, &human, None);
+    let narrowing = [0u8; 32];
+    let chain_fp = chain.fingerprint();
+    let commitment = ZkChainCommitment::seal(&chain, &intent, &narrowing, now, &human, None);
 
-        let mut trace = ReasoningTrace::new(now);
-        trace.record(ReasoningStepKind::Thought, b"analyzing trade", now + 1);
-        trace.record(ReasoningStepKind::FinalAction, b"execute trade.equity AAPL 100", now + 2);
-        let root = trace.finalize(now + 3, &chain_fp).unwrap();
+    let mut trace = ReasoningTrace::new(now);
+    trace.record(ReasoningStepKind::Thought, b"analyzing trade", now + 1);
+    trace.record(
+        ReasoningStepKind::FinalAction,
+        b"execute trade.equity AAPL 100",
+        now + 2,
+    );
+    let root = trace.finalize(now + 3, &chain_fp).unwrap();
 
-        let proof = ZkTraceProof::seal(commitment, root, &human);
-        assert!(proof.verify().is_ok());
-        assert!(!proof.has_zk_proof());
-    }
+    let proof = ZkTraceProof::seal(commitment, root, &human);
+    assert!(proof.verify().is_ok());
+    assert!(!proof.has_zk_proof());
+}
 
-    #[test]
-    fn zk_trace_proof_tampered_fails() {
-        use crate::{
-            identity::DyoloIdentity,
-            intent::Intent,
-            cert::CertBuilder,
-            provenance::{ReasoningTrace, ReasoningStepKind},
-        };
+#[test]
+fn zk_trace_proof_tampered_fails() {
+    use crate::{
+        cert::CertBuilder,
+        identity::DyoloIdentity,
+        intent::Intent,
+        provenance::{ReasoningStepKind, ReasoningTrace},
+    };
 
-        let human = DyoloIdentity::generate();
-        let agent = DyoloIdentity::generate();
-        let now = 1_700_000_000u64;
-        let intent = Intent::new("read").unwrap().hash();
-        let cert = CertBuilder::new(agent.verifying_key(), intent, now, now + 3600)
-            .sign(&human);
-        let mut chain = DyoloChain::new(human.verifying_key(), intent);
-        chain.push(cert);
-        let chain_fp = chain.fingerprint();
+    let human = DyoloIdentity::generate();
+    let agent = DyoloIdentity::generate();
+    let now = 1_700_000_000u64;
+    let intent = Intent::new("read").unwrap().hash();
+    let cert = CertBuilder::new(agent.verifying_key(), intent, now, now + 3600).sign(&human);
+    let mut chain = DyoloChain::new(human.verifying_key(), intent);
+    chain.push(cert);
+    let chain_fp = chain.fingerprint();
 
-        let mut trace = ReasoningTrace::new(now);
-        trace.record(ReasoningStepKind::Thought, b"step one", now + 1);
-        let root = trace.finalize(now + 2, &chain_fp).unwrap();
+    let mut trace = ReasoningTrace::new(now);
+    trace.record(ReasoningStepKind::Thought, b"step one", now + 1);
+    let root = trace.finalize(now + 2, &chain_fp).unwrap();
 
-        let commitment = ZkChainCommitment::seal(&chain, &intent, &[0u8; 32], now, &human, None);
-        let mut proof = ZkTraceProof::seal(commitment, root, &human);
-        proof.combined_commitment[0] ^= 0xFF;
-        assert!(proof.verify().is_err());
-    }
+    let commitment = ZkChainCommitment::seal(&chain, &intent, &[0u8; 32], now, &human, None);
+    let mut proof = ZkTraceProof::seal(commitment, root, &human);
+    proof.combined_commitment[0] ^= 0xFF;
+    assert!(proof.verify().is_err());
+}
