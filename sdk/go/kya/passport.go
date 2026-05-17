@@ -1,5 +1,11 @@
 package a1
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"reflect"
+)
 
 // protocolTag is the namespace binding prefix embedded in every root
 // DelegationCert, as specified in §4.2 of spec/A1-PROTOCOL.md. Included in
@@ -9,13 +15,6 @@ var protocolTag = []byte{
 	0x20, 0x76, 0x32, 0x2e, 0x38, 0x2e, 0x30,
 	0x7c, 0x64, 0x79, 0x6f, 0x6c, 0x6f, 0x67, 0x69, 0x63, 0x69, 0x61, 0x6e,
 }
-
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"reflect"
-)
 
 // PassportReceipt is returned after a successful passport-guarded authorization.
 type PassportReceipt struct {

@@ -199,10 +199,22 @@ fn passport_sub_from_csv_matches_sub_slice() {
     let clock = SystemClock;
 
     let a = passport
-        .issue_sub(agent.verifying_key(), &["trade.equity"], 3600, &root, &clock)
+        .issue_sub(
+            agent.verifying_key(),
+            &["trade.equity"],
+            3600,
+            &root,
+            &clock,
+        )
         .unwrap();
     let b = passport
-        .issue_sub_from_csv(agent.verifying_key(), "trade.equity", 3600, &root, &clock)
+        .issue_sub_from_csv(
+            agent.verifying_key(),
+            "trade.equity",
+            3600,
+            &root,
+            &clock,
+        )
         .unwrap();
 
     assert_eq!(

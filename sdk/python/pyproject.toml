@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name         = "a1"
 version      = "2.8.0"
 description  = "A1 — Python SDK for AI agent identity and delegation authorization with cryptographic chain-of-custody"
-readme       = "README.md"
+readme       = "sdk-python-README.md"
 license      = { text = "MIT OR Apache-2.0" }
 authors      = [{ name = "dyolo", email = "dyologician@users.noreply.github.com" }]
 requires-python = ">=3.9"
