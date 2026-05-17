@@ -8,7 +8,7 @@ use crate::identity::Signer;
 use crate::intent::IntentHash;
 
 const DOMAIN_ZK_COMMIT: &str = "a1::dyolo::zk::commit::v2.8.0";
-const DOMAIN_ZK_BIND:   &str = "a1::dyolo::zk::bind::v2.8.0";
+const DOMAIN_ZK_BIND: &str = "a1::dyolo::zk::bind::v2.8.0";
 
 /// How a `ZkChainCommitment` was produced.
 ///
@@ -115,7 +115,8 @@ impl ZkChainCommitment {
         passport_namespace: Option<&str>,
     ) -> Self {
         let chain_fp = chain.fingerprint();
-        let commitment = compute_commitment(&chain_fp, intent, narrowing_commitment, sealed_at_unix);
+        let commitment =
+            compute_commitment(&chain_fp, intent, narrowing_commitment, sealed_at_unix);
         let sig = authority.sign_message(&commitment);
         let authority_did = format!(
             "did:a1:{}",
@@ -151,7 +152,12 @@ impl ZkChainCommitment {
             .try_into()
             .map_err(|_| A1Error::WireFormatError("chain fingerprint must be 32 bytes".into()))?;
 
-        let expected = compute_commitment(&chain_fp, &self.intent, narrowing_commitment, self.sealed_at_unix);
+        let expected = compute_commitment(
+            &chain_fp,
+            &self.intent,
+            narrowing_commitment,
+            self.sealed_at_unix,
+        );
 
         if expected[..].ct_eq(&self.commitment[..]).unwrap_u8() == 0 {
             return Err(A1Error::InvalidSubScopeProof);
@@ -164,7 +170,8 @@ impl ZkChainCommitment {
             }
         }
 
-        let pk_hex = self.authority_did
+        let pk_hex = self
+            .authority_did
             .strip_prefix("did:a1:")
             .ok_or_else(|| A1Error::WireFormatError("invalid authority DID".into()))?;
         let pk_bytes = hex::decode(pk_hex)
@@ -185,7 +192,9 @@ impl ZkChainCommitment {
         use ed25519_dalek::Verifier;
         authority_vk
             .verify(&self.commitment, &sig)
-            .map_err(|_| A1Error::HybridSignatureInvalid { component: "zk-commitment" })
+            .map_err(|_| A1Error::HybridSignatureInvalid {
+                component: "zk-commitment",
+            })
     }
 
     /// Attach an external zkVM proof to this commitment.
@@ -275,7 +284,10 @@ pub struct ZkTraceProof {
     /// `did:a1:` identifier of the sealing authority.
     pub authority_did: String,
     /// Optional zkVM proof bytes (hex). Activate with the RISC Zero guest program.
-    #[cfg_attr(feature = "serde", serde(default, skip_serializing_if = "String::is_empty"))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "String::is_empty")
+    )]
     pub zk_proof_hex: String,
 }
 
@@ -290,10 +302,8 @@ impl ZkTraceProof {
         trace_root: crate::provenance::ProvenanceRoot,
         authority: &dyn crate::identity::Signer,
     ) -> Self {
-        let combined = trace_combined_commitment(
-            &chain_commitment.commitment,
-            &trace_root.merkle_root,
-        );
+        let combined =
+            trace_combined_commitment(&chain_commitment.commitment, &trace_root.merkle_root);
         let sig = authority.sign_message(&combined);
         let authority_did = format!(
             "did:a1:{}",
@@ -316,7 +326,11 @@ impl ZkTraceProof {
             &self.trace_root.merkle_root,
         );
         use subtle::ConstantTimeEq;
-        if expected[..].ct_eq(&self.combined_commitment[..]).unwrap_u8() == 0 {
+        if expected[..]
+            .ct_eq(&self.combined_commitment[..])
+            .unwrap_u8()
+            == 0
+        {
             return Err(crate::error::A1Error::InvalidSubScopeProof);
         }
 
@@ -339,10 +353,11 @@ impl ZkTraceProof {
         let sig = ed25519_dalek::Signature::from_bytes(&sig_arr);
 
         use ed25519_dalek::Verifier;
-        vk.verify(&self.combined_commitment, &sig)
-            .map_err(|_| crate::error::A1Error::HybridSignatureInvalid {
+        vk.verify(&self.combined_commitment, &sig).map_err(|_| {
+            crate::error::A1Error::HybridSignatureInvalid {
                 component: "zk-trace",
-            })
+            }
+        })
     }
 
     /// Attach a zkVM proof to upgrade from commitment-only to full ZK.
@@ -382,11 +397,7 @@ pub(crate) mod hex_32_serde {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        cert::CertBuilder,
-        identity::DyoloIdentity,
-        intent::Intent,
-    };
+    use crate::{cert::CertBuilder, identity::DyoloIdentity, intent::Intent};
 
     #[test]
     fn seal_and_verify() {
@@ -400,14 +411,8 @@ mod tests {
         chain.push(cert);
 
         let narrowing = [0u8; 32];
-        let commitment = ZkChainCommitment::seal(
-            &chain,
-            &intent,
-            &narrowing,
-            now,
-            &human,
-            Some("acme-bot"),
-        );
+        let commitment =
+            ZkChainCommitment::seal(&chain, &intent, &narrowing, now, &human, Some("acme-bot"));
 
         assert!(commitment
             .verify_commitment(&narrowing, now, Some(86400))
