@@ -48,7 +48,7 @@ jobs:
           cargo audit
 
       - name: Publish dry-run (core crate only)
-        run: cargo publish --dry-run -p a1
+        run: cargo publish --dry-run -p a1-ai
         # Sub-crate dry-runs are omitted from CI because they depend on
         # `a1 = "2.8"` from crates.io (not the local path) when packaging.
         # They will only pass after `a1` v2.8.0 is published to crates.io.
