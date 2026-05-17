@@ -448,7 +448,7 @@ export function withDyoloLangGraphNode<TState extends Record<string, unknown>>(
     });
     if (!auth.authorized) {
       throw new A1Error(
-        `LangGraph node '${opts.intentName}' authorization denied: ${auth.reason ?? "unknown"}`,
+        `LangGraph node '${opts.intentName}' authorization denied: ${"authorization denied"}`,
       );
     }
     return opts.node(state, auth);
@@ -489,7 +489,7 @@ export function withDyoloSkFunction<TArgs extends Record<string, unknown>, TRetu
     });
     if (!auth.authorized) {
       throw new A1Error(
-        `Semantic Kernel function '${opts.intentName}' authorization denied: ${auth.reason ?? "unknown"}`,
+        `Semantic Kernel function '${opts.intentName}' authorization denied: ${"authorization denied"}`,
       );
     }
     return opts.fn(args, auth);

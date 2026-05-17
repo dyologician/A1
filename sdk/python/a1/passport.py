@@ -195,7 +195,14 @@ class PassportClient:
         self._client.close()
         if self._async_client is not None:
             import asyncio
-            asyncio.get_event_loop().run_until_complete(self._async_client.aclose())
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(self._async_client.aclose())
+                else:
+                    loop.run_until_complete(self._async_client.aclose())
+            except RuntimeError:
+                pass
 
 
 def a1_guard(
