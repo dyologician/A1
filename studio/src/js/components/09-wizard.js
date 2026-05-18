@@ -168,8 +168,12 @@ function ProtectAgent({ prefill, onPrefillConsumed }){
     if(step!==4)return;
     (async()=>{
       const ns=issueResult?.namespace||(name||'my-agent').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
-      const r=await api('GET','/v1/passports/read?namespace='+encodeURIComponent(ns));
-      if(r.ok&&r.data)setLivePassport(r.data);
+      // Use list endpoint and find by namespace (read endpoint requires path, not namespace)
+      const r=await api('GET','/v1/passports/list');
+      if(r.ok&&r.data&&Array.isArray(r.data.passports)){
+        const found=r.data.passports.find(p=>(p.namespace||'').toLowerCase()===ns.toLowerCase());
+        if(found)setLivePassport(found);
+      }
     })();
   },[step]);
 
@@ -438,18 +442,18 @@ function ProtectAgent({ prefill, onPrefillConsumed }){
     // ── STEP 3: Choose method (MCP zero-code or decorator) ───────────────────
     step===3&&h('div',null,
       h('h2',{style:{fontSize:18,fontWeight:700,marginBottom:4}},'🔌 How do you want to connect?'),
-      h('p',{style:{color:'var(--t2)',fontSize:'var(--fsm)',marginBottom:20}},'Pick the option that fits your setup. Both work.'),
+      h('p',{style:{color:'var(--t2)',fontSize:'var(--fsm)',marginBottom:20}},'Not sure? Pick the first option — it works for most people with no code required.'),
 
       h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}},
         h('div',{onClick:()=>setAgentType('mcp'),style:{border:'2px solid '+(agentType==='mcp'?'var(--green)':'var(--b1)'),borderRadius:'var(--r)',padding:16,cursor:'pointer',background:agentType==='mcp'?'rgba(34,197,94,.05)':'var(--s2)',transition:'all .2s'}},
           h('div',{style:{fontSize:22,marginBottom:6}},'⚡'),
-          h('div',{style:{fontWeight:700,fontSize:'var(--fbase)',marginBottom:4}},'Zero-Code (MCP)'),
-          h('div',{style:{fontSize:'var(--fxs)',color:'var(--t2)',lineHeight:1.6}},'One config file. No code changes. Claude Code picks it up automatically.'),
+          h('div',{style:{fontWeight:700,fontSize:'var(--fbase)',marginBottom:4}},'No code — one config file'),
+          h('div',{style:{fontSize:'var(--fxs)',color:'var(--t2)',lineHeight:1.6}},'A1 writes a small file to your agent folder. The agent picks it up automatically — nothing to install, nothing to code.'),
           agentType==='mcp'&&h('div',{style:{marginTop:6,color:'var(--green)',fontSize:'var(--fxs)',fontFamily:'var(--mono)'}},'✓ Selected')),
         h('div',{onClick:()=>{if(agentType==='mcp')setAgentType('claude-code');},style:{border:'2px solid '+(agentType!=='mcp'?'var(--green)':'var(--b1)'),borderRadius:'var(--r)',padding:16,cursor:'pointer',background:agentType!=='mcp'?'rgba(34,197,94,.05)':'var(--s2)',transition:'all .2s'}},
           h('div',{style:{fontSize:22,marginBottom:6}},'🧩'),
-          h('div',{style:{fontWeight:700,fontSize:'var(--fbase)',marginBottom:4}},'Decorator / SDK'),
-          h('div',{style:{fontSize:'var(--fxs)',color:'var(--t2)',lineHeight:1.6}},'Add @a1_guard to your tools. Full control for developers.'),
+          h('div',{style:{fontWeight:700,fontSize:'var(--fbase)',marginBottom:4}},'I write code — add to my project'),
+          h('div',{style:{fontSize:'var(--fxs)',color:'var(--t2)',lineHeight:1.6}},'Add one decorator or function to your existing code. Pick your language below.'),
           agentType!=='mcp'&&h('div',{style:{marginTop:6,color:'var(--green)',fontSize:'var(--fxs)',fontFamily:'var(--mono)'}},'✓ Selected'))),
 
       agentType==='mcp'&&h('div',null,
