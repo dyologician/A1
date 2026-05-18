@@ -108,7 +108,7 @@ const KNOWN_AGENTS: &[KnownAgent] = &[
         icon:             "🦜",
         connect_method:   "mcp_json",
         homepage:         "https://langchain.com",
-        install_cmd_unix: "pip3 install --user langchain langchain-openai 2>/dev/null || python3 -m pip install --user langchain langchain-openai",
+        install_cmd_unix: "pip3 install --break-system-packages --user langchain langchain-openai 2>/dev/null || pip3 install --user langchain langchain-openai 2>/dev/null || python3 -m pip install --break-system-packages --user langchain langchain-openai",
         install_cmd_win:  "pip install langchain langchain-openai",
         uninstall_cmd:    "pip3 uninstall -y langchain 2>/dev/null || python3 -m pip uninstall -y langchain",
         recommended:      false,
@@ -120,7 +120,7 @@ const KNOWN_AGENTS: &[KnownAgent] = &[
         icon:             "⛵",
         connect_method:   "mcp_json",
         homepage:         "https://crewai.com",
-        install_cmd_unix: "pip3 install --user crewai 2>/dev/null || python3 -m pip install --user crewai",
+        install_cmd_unix: "pip3 install --break-system-packages --user crewai 2>/dev/null || pip3 install --user crewai 2>/dev/null || python3 -m pip install --break-system-packages --user crewai",
         install_cmd_win:  "pip install crewai",
         uninstall_cmd:    "pip3 uninstall -y crewai 2>/dev/null || python3 -m pip uninstall -y crewai",
         recommended:      false,
@@ -132,7 +132,7 @@ const KNOWN_AGENTS: &[KnownAgent] = &[
         icon:             "🟢",
         connect_method:   "mcp_json",
         homepage:         "https://openai.com/agents",
-        install_cmd_unix: "pip3 install --user openai-agents 2>/dev/null || python3 -m pip install --user openai-agents",
+        install_cmd_unix: "pip3 install --break-system-packages --user openai-agents 2>/dev/null || pip3 install --user openai-agents 2>/dev/null || python3 -m pip install --break-system-packages --user openai-agents",
         install_cmd_win:  "pip install openai-agents",
         uninstall_cmd:    "pip3 uninstall -y openai-agents 2>/dev/null || python3 -m pip uninstall -y openai-agents",
         recommended:      false,
@@ -283,6 +283,14 @@ fn find_claude_code(checked: &mut Vec<String>) -> Option<PathBuf> {
             return Some(p);
         }
     }
+    // Check ~/.npm-global/bin/claude (where our install command puts it)
+    let npm_global_claude = home().join(".npm-global").join("bin").join("claude");
+    if npm_global_claude.exists() {
+        let fallback = home().join(".claude");
+        std::fs::create_dir_all(&fallback).ok();
+        return Some(fallback);
+    }
+    // Check standard PATH
     if which_binary("claude").is_some() {
         let fallback = home().join(".claude");
         let s = fallback.display().to_string();
@@ -585,7 +593,7 @@ pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
             connected,
             config_file,
             connect_hint:     "Adds A1 guard to your LangChain project directory".into(),
-            install_cmd_unix: "pip3 install --user langchain langchain-openai 2>/dev/null || python3 -m pip install --user langchain langchain-openai".into(),
+            install_cmd_unix: "pip3 install --break-system-packages --user langchain langchain-openai 2>/dev/null || pip3 install --user langchain langchain-openai 2>/dev/null || python3 -m pip install --break-system-packages --user langchain langchain-openai".into(),
             install_cmd_win:  "pip install langchain langchain-openai".into(),
             uninstall_cmd:    "pip3 uninstall -y langchain 2>/dev/null || python3 -m pip uninstall -y langchain".into(),
             recommended:      false,
@@ -638,7 +646,7 @@ pub async fn scan_handler(_state: State<Arc<AppState>>) -> impl IntoResponse {
             connected,
             config_file,
             connect_hint:     "Adds A1 guard to your OpenAI Agents project".into(),
-            install_cmd_unix: "pip3 install --user openai-agents 2>/dev/null || python3 -m pip install --user openai-agents".into(),
+            install_cmd_unix: "pip3 install --break-system-packages --user openai-agents 2>/dev/null || pip3 install --user openai-agents 2>/dev/null || python3 -m pip install --break-system-packages --user openai-agents".into(),
             install_cmd_win:  "pip install openai-agents".into(),
             uninstall_cmd:    "pip3 uninstall -y openai-agents 2>/dev/null || python3 -m pip uninstall -y openai-agents".into(),
             recommended:      false,
@@ -1285,6 +1293,18 @@ pub async fn remove_handler(Json(req): Json<RemoveRequest>) -> impl IntoResponse
         .into_response();
     }
 
+    // When running inside Docker we can't uninstall tools on the host.
+    // Return the command for the user to run in their own terminal.
+    if std::env::var("A1_RUNNING_IN_DOCKER").is_ok() {
+        return Json(RemoveResponse {
+            success: false,
+            agent_id: req.agent_id,
+            message: format!("Run this in your terminal to uninstall: {uninstall_cmd}"),
+            output: uninstall_cmd.to_string(),
+        })
+        .into_response();
+    }
+
     let result = tokio::process::Command::new("sh")
         .arg("-c")
         .arg(uninstall_cmd)
@@ -1302,12 +1322,12 @@ pub async fn remove_handler(Json(req): Json<RemoveRequest>) -> impl IntoResponse
             Json(RemoveResponse {
                 success,
                 agent_id: req.agent_id.clone(),
-                message:  if success {
+                message: if success {
                     format!("✓ '{}' uninstalled successfully.", req.agent_id)
                 } else {
-                    format!("✗ Uninstall returned non-zero exit code. The agent may still be partially installed.")
+                    format!("✗ Uninstall failed. Try running the command in your terminal.")
                 },
-                output:   out,
+                output: out,
             }).into_response()
         }
         Err(e) => Json(RemoveResponse {
