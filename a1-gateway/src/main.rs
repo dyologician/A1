@@ -352,7 +352,9 @@ async fn system_force_stop_handler() -> impl axum::response::IntoResponse {
         #[cfg(unix)]
         {
             let pid = std::process::id();
-            unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM); }
+            unsafe {
+                libc::kill(pid as libc::pid_t, libc::SIGTERM);
+            }
         }
         #[cfg(not(unix))]
         std::process::exit(0);
