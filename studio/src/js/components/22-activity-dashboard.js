@@ -161,6 +161,300 @@ function ActivityDashboard() {
 
     h('div', { style: { marginTop: 12, display: 'flex', gap: 8, justifyContent: 'flex-end' } },
       h('button', { className: 'btn btn-s', onClick: load }, '↺ Refresh')
+    ),
+
+    !loading && passports.length > 0 && h(ShareCard, { passports })
+  );
+}
+
+
+// ── ShareCard — generate a downloadable/shareable A1 protection card ──────────
+
+function ShareCard({ passports }) {
+  const [show,        setShow]        = useState(false);
+  const [selected,    setSelected]    = useState([]);   // selected agent namespaces
+  const [showAgent,   setShowAgent]   = useState(true);
+  const [showCaps,    setShowCaps]    = useState(true);
+  const [showCount,   setShowCount]   = useState(true);
+  const [customNote,  setCustomNote]  = useState('');
+  const [generating,  setGenerating]  = useState(false);
+  const canvasRef = useRef(null);
+
+  // Init: select all active passports
+  useEffect(() => {
+    if (show && selected.length === 0) {
+      setSelected(passports.filter(p => p.days_remaining > 0).map(p => p.namespace));
+    }
+  }, [show]);
+
+  function toggleAgent(ns) {
+    setSelected(s => s.includes(ns) ? s.filter(x => x !== ns) : [...s, ns]);
+  }
+
+  function drawCard() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = 1200, H = 630;
+    canvas.width = W;
+    canvas.height = H;
+
+    const agents = passports.filter(p => selected.includes(p.namespace));
+    const totalCaps = [...new Set(agents.flatMap(p => p.capabilities || []))];
+
+    // ── Background ──
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0,   '#0a0a0f');
+    bg.addColorStop(0.5, '#0d0d1a');
+    bg.addColorStop(1,   '#0a0f0a');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(99,102,241,0.06)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    // Glow orbs
+    const glow1 = ctx.createRadialGradient(200, 150, 0, 200, 150, 350);
+    glow1.addColorStop(0, 'rgba(99,102,241,0.18)');
+    glow1.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow1;
+    ctx.fillRect(0, 0, W, H);
+
+    const glow2 = ctx.createRadialGradient(1000, 480, 0, 1000, 480, 300);
+    glow2.addColorStop(0, 'rgba(34,197,94,0.12)');
+    glow2.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow2;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── Top bar ──
+    ctx.fillStyle = 'rgba(99,102,241,0.15)';
+    ctx.fillRect(0, 0, W, 4);
+    const topBar = ctx.createLinearGradient(0, 0, W, 0);
+    topBar.addColorStop(0, '#6366f1');
+    topBar.addColorStop(0.5, '#22c55e');
+    topBar.addColorStop(1, '#6366f1');
+    ctx.fillStyle = topBar;
+    ctx.fillRect(0, 0, W, 3);
+
+    // ── A1 Logo badge ──
+    ctx.fillStyle = 'rgba(99,102,241,0.2)';
+    roundRect(ctx, 52, 48, 72, 36, 8);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(99,102,241,0.5)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, 52, 48, 72, 36, 8);
+    ctx.stroke();
+    ctx.fillStyle = '#6366f1';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('A1', 72, 71);
+
+    // ── Shield icon area ──
+    ctx.font = '52px serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('🛡', 50, 175);
+
+    // ── Headline ──
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 52px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('My AI agents are', 52, 250);
+
+    const grad = ctx.createLinearGradient(52, 260, 700, 320);
+    grad.addColorStop(0, '#6366f1');
+    grad.addColorStop(1, '#22c55e');
+    ctx.fillStyle = grad;
+    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText('cryptographically protected.', 52, 320);
+
+    // ── Agent list ──
+    if (showAgent && agents.length > 0) {
+      let y = 378;
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      const rowH = 38, rowW = 520;
+      agents.slice(0, 4).forEach((p, i) => {
+        roundRect(ctx, 52, y + i * (rowH + 6), rowW, rowH, 6);
+        ctx.fill();
+        // green dot
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.arc(76, y + i * (rowH + 6) + rowH / 2, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // namespace
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '15px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(p.namespace, 92, y + i * (rowH + 6) + rowH / 2 + 5);
+        // caps count
+        if (showCaps && p.capabilities) {
+          ctx.fillStyle = 'rgba(99,102,241,0.9)';
+          ctx.font = '12px monospace';
+          ctx.fillText(p.capabilities.length + ' capabilities', rowW - 60, y + i * (rowH + 6) + rowH / 2 + 4);
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      });
+      if (agents.length > 4) {
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = '13px monospace';
+        ctx.fillText('+' + (agents.length - 4) + ' more', 60, y + 4 * (rowH + 6) + 18);
+      }
+    }
+
+    // ── Stats right side ──
+    if (showCount) {
+      const stats = [
+        { label: 'Protected', value: agents.length, color: '#22c55e' },
+        { label: 'Capabilities', value: totalCaps.length, color: '#6366f1' },
+      ];
+      stats.forEach((s, i) => {
+        const x = 700 + i * 220, y = 220;
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        roundRect(ctx, x, y, 180, 120, 12);
+        ctx.fill();
+        ctx.strokeStyle = i === 0 ? 'rgba(34,197,94,0.3)' : 'rgba(99,102,241,0.3)';
+        ctx.lineWidth = 1;
+        roundRect(ctx, x, y, 180, 120, 12);
+        ctx.stroke();
+        ctx.fillStyle = s.color;
+        ctx.font = 'bold 44px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.value, x + 90, y + 68);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillText(s.label, x + 90, y + 94);
+      });
+    }
+
+    // ── Custom note ──
+    if (customNote.trim()) {
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = 'italic 18px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('"' + customNote.trim().slice(0, 80) + '"', 700, 390);
+    }
+
+    // ── Bottom bar ──
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    ctx.fillRect(0, H - 54, W, 54);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('github.com/dyologician/A1', 52, H - 22);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = '13px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('Cryptographic identity & authorization for AI agents', W - 52, H - 22);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  useEffect(() => {
+    if (show) setTimeout(drawCard, 50);
+  }, [show, selected, showAgent, showCaps, showCount, customNote]);
+
+  function download() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const a = document.createElement('a');
+    a.download = 'a1-protected.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+
+  if (!show) return h('button', {
+    className: 'btn btn-s',
+    style: { display: 'flex', alignItems: 'center', gap: 6 },
+    onClick: () => setShow(true),
+  }, '🔗 Share protection card');
+
+  const active = passports.filter(p => p.days_remaining > 0);
+
+  return h('div', { style: { marginTop: 16, border: '1px solid var(--b3)', borderRadius: 'var(--r)', overflow: 'hidden' } },
+
+    // Header
+    h('div', { style: { padding: '12px 16px', background: 'var(--b2)', borderBottom: '1px solid var(--b3)', display: 'flex', alignItems: 'center', gap: 10 } },
+      h('div', { style: { fontWeight: 700, fontSize: 'var(--fsm)', flex: 1 } }, '🔗 Share your protection card'),
+      h('button', { className: 'btn btn-sm', style: { fontSize: 'var(--fxs)' }, onClick: () => setShow(false) }, '✕')
+    ),
+
+    h('div', { style: { display: 'grid', gridTemplateColumns: '280px 1fr', gap: 0 } },
+
+      // Controls
+      h('div', { style: { padding: 16, borderRight: '1px solid var(--b3)', display: 'flex', flexDirection: 'column', gap: 14 } },
+
+        // Agent picker
+        h('div', null,
+          h('div', { style: { fontSize: 'var(--fxs)', fontWeight: 600, marginBottom: 8, color: 'var(--t1)' } }, 'Which agents to include'),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
+            active.map(p => h('label', { key: p.namespace, style: { display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 'var(--fxs)' } },
+              h('input', { type: 'checkbox', checked: selected.includes(p.namespace), onChange: () => toggleAgent(p.namespace) }),
+              h('span', { style: { fontFamily: 'var(--mono)' } }, p.namespace)
+            ))
+          )
+        ),
+
+        // Toggle options
+        h('div', null,
+          h('div', { style: { fontSize: 'var(--fxs)', fontWeight: 600, marginBottom: 8, color: 'var(--t1)' } }, 'What to show'),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+            ...[
+              { key: 'agent',  label: 'Agent names',         val: showAgent,  set: setShowAgent },
+              { key: 'caps',   label: 'Capability count',    val: showCaps,   set: setShowCaps },
+              { key: 'count',  label: 'Stats (count)',       val: showCount,  set: setShowCount },
+            ].map(o => h('label', { key: o.key, style: { display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 'var(--fxs)' } },
+              h('input', { type: 'checkbox', checked: o.val, onChange: () => o.set(v => !v) }),
+              o.label
+            ))
+          )
+        ),
+
+        // Custom note
+        h('div', null,
+          h('div', { style: { fontSize: 'var(--fxs)', fontWeight: 600, marginBottom: 6, color: 'var(--t1)' } }, 'Add a note (optional)'),
+          h('input', {
+            className: 'inp',
+            style: { fontSize: 'var(--fxs)' },
+            placeholder: 'e.g. All my trading bots run through A1',
+            value: customNote,
+            onChange: e => setCustomNote(e.target.value),
+            maxLength: 80,
+          })
+        ),
+
+        // Download button
+        h('button', {
+          className: 'btn btn-p',
+          style: { width: '100%', justifyContent: 'center', marginTop: 4 },
+          onClick: download,
+          disabled: selected.length === 0,
+        }, '⬇ Download card')
+      ),
+
+      // Canvas preview
+      h('div', { style: { padding: 16, background: 'var(--b1)', display: 'flex', flexDirection: 'column', gap: 8 } },
+        h('div', { style: { fontSize: 'var(--fxs)', color: 'var(--t3)', marginBottom: 4 } }, 'Preview'),
+        h('canvas', {
+          ref: canvasRef,
+          style: { width: '100%', borderRadius: 6, border: '1px solid var(--b3)' },
+        })
+      )
     )
   );
 }
