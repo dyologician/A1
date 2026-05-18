@@ -212,6 +212,19 @@ Write-Host ""
 Write-Host "  A1 — Know Your Agent  v$Version" -ForegroundColor White
 Write-Host ""
 
+# Kill any orphan a1 containers from other folders before starting
+try {
+    $dockerOk = $false
+    try { docker info 2>$null | Out-Null; $dockerOk = ($LASTEXITCODE -eq 0) } catch {}
+    if ($dockerOk -and -not (Test-A1Running)) {
+        $orphans = docker ps --filter "name=a1" --filter "name=gateway" -q 2>$null
+        if ($orphans) {
+            Write-Warn "Found leftover A1 containers — cleaning up…"
+            $orphans | ForEach-Object { docker stop $_ 2>$null | Out-Null; docker rm $_ 2>$null | Out-Null }
+        }
+    }
+} catch {}
+
 if (Test-A1Running) {
     Write-Ok "A1 is already running"
     Open-Browser $QuickstartUrl

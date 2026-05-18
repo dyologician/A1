@@ -336,8 +336,8 @@ try_docker() {
     echo -e "  ${GREEN}Secure keys generated!${RESET}"
   fi
 
-  docker compose -f "${compose_file}" up -d --quiet-pull 2>/dev/null \
-    || docker-compose -f "${compose_file}" up -d 2>/dev/null \
+  docker compose -f "${compose_file}" up -d --build --quiet-pull 2>/dev/null \
+    || docker-compose -f "${compose_file}" up -d --build 2>/dev/null \
     || return 1
 
   # After a fresh build all three services (gateway + redis + postgres) need to
@@ -413,6 +413,20 @@ esac
 echo ""
 echo -e "  ${BOLD}A1 — Know Your Agent${RESET}  ${DIM}v${VERSION}${RESET}"
 echo ""
+
+# ── Kill any orphan a1 containers from other folders before starting ──────────
+# This prevents "A1 is already running" getting stuck from a previous session.
+if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
+  _orphans=$(docker ps --filter "name=a1" --filter "name=gateway" -q 2>/dev/null)
+  if [ -n "${_orphans}" ]; then
+    # Check if our own compose project is already healthy — if so, leave it alone
+    if ! is_running; then
+      echo -e "  ${YELLOW}Found leftover A1 containers — cleaning up…${RESET}"
+      echo "${_orphans}" | xargs docker stop 2>/dev/null || true
+      echo "${_orphans}" | xargs docker rm   2>/dev/null || true
+    fi
+  fi
+fi
 
 if is_running; then
   echo -e "  ${GREEN}A1 is already running${RESET}"
