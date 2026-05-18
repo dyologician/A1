@@ -1,81 +1,80 @@
 # Contributing to A1
 
-Welcome to the `a1` ecosystem. This project establishes the definitive cryptographic chain-of-custody protocol for recursive AI agent delegation. We are building the identity and authorization layer for the next generation of enterprise AI, and we demand the highest standards of engineering, security, and performance.
+A1 is a cryptographic identity and authorization layer for AI agents. Thanks for taking the time to contribute.
 
-By contributing to this repository, you agree to adhere to the engineering standards outlined below and to the Contributor License Agreement.
+This document covers how to set up a development environment, what the code standards are, and how the PR process works.
 
 ---
 
 ## Table of Contents
 
-1. [Core Engineering Principles](#1-core-engineering-principles)
-2. [Local Development Environment](#2-local-development-environment)
-3. [Language-Specific Guidelines](#3-language-specific-guidelines)
-4. [Pull Request Standards](#4-pull-request-standards)
-5. [Security Contributions](#5-security-contributions)
-6. [Contributor License Agreement](#6-contributor-license-agreement)
-7. [Code of Conduct](#7-code-of-conduct)
+1. [Getting started](#1-getting-started)
+2. [What you can contribute](#2-what-you-can-contribute)
+3. [Development setup](#3-development-setup)
+4. [Code standards](#4-code-standards)
+5. [Pull requests](#5-pull-requests)
+6. [Security issues](#6-security-issues)
+7. [Contributor License Agreement](#7-contributor-license-agreement)
+8. [Code of Conduct](#8-code-of-conduct)
 
 ---
 
-## 1. Core Engineering Principles
+## 1. Getting started
 
-**Security and cryptography first.** This is a security protocol. Do not roll your own crypto. Rely strictly on the established primitives (`ed25519-dalek`, `blake3`, `subtle`). Every authorization path must be constant-time where applicable to prevent timing attacks.
+If you've found a bug, open an [issue](https://github.com/dyologician/A1/issues) first so we can discuss it before you invest time writing a fix. For features, same thing — a quick issue conversation saves everyone effort.
 
-**Zero TOCTOU vulnerabilities.** Storage adapters (Redis, PostgreSQL) must use single-roundtrip, atomic operations for nonce consumption. Check-then-set logic will be immediately rejected.
-
-**Absolute determinism.** Intent hashing and Merkle tree generation must remain strictly deterministic. Order-independent parameter sorting must be preserved across all SDKs.
-
-**Stateless by default.** The gateway and SDKs operate in stateless environments. Do not introduce in-memory caching for authorization decisions unless explicitly feature-gated and strictly bounded.
-
-**No breaking changes to wire formats.** The `SignedChain` and `DelegationCert` wire formats must remain backward compatible within a major version. Chains issued under v2.0.0 must remain valid under v2.8.0+. New fields must be optional and versioned.
+For typos, documentation fixes, and small obvious bugs, feel free to open a PR directly.
 
 ---
 
-## 2. Local Development Environment
+## 2. What you can contribute
 
-`a1` is a multi-language ecosystem. You only need to set up the environments for the specific components you are modifying, though full-stack contributors will need the complete toolchain.
+- Bug fixes
+- New SDK integrations (framework tools, middleware, etc.)
+- Documentation improvements
+- Test coverage
+- Performance improvements with benchmarks
+- Security fixes — see [Section 6](#6-security-issues) before opening anything publicly
+
+---
+
+## 3. Development setup
+
+You only need to set up the languages relevant to what you're changing.
 
 ### Prerequisites
 
-| Tool | Minimum version | Purpose |
+| Tool | Minimum version | Used for |
 |---|---|---|
-| Rust | 1.85+ (via `rustup`) | Core crate, gateway, CLI, storage adapters |
+| Rust | 1.85+ via `rustup` | Core crate, gateway, CLI, storage adapters |
 | Node.js | 20+ | TypeScript SDK |
 | Python | 3.9+ | Python SDK |
 | Go | 1.21+ | Go SDK |
-| Docker + Docker Compose | Latest stable | Gateway, Redis, Postgres integration tests |
+| Docker + Docker Compose | Latest stable | Gateway and integration tests |
 
-### Setting Up
-
-**1. Clone the repository:**
+### Setup
 
 ```bash
-git clone https://github.com/dyologician/a1.git
-cd a1
+git clone https://github.com/dyologician/A1
+cd A1
 ```
 
-**2. Bootstrap the core workspace (Rust):**
+**Rust (core + gateway + CLI):**
 
 ```bash
 cargo build --workspace --all-features
 cargo test --workspace --all-features
 ```
 
-**3. Start the local infrastructure (Database / Cache):**
+**Integration tests (requires Docker):**
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d redis postgres
-```
-
-**4. Run the integration tests:**
-
-```bash
 cargo test --test integration
 cargo test --test passport_integration
 ```
 
-**5. Set up the Python SDK:**
+**Python SDK:**
 
 ```bash
 cd sdk/python
@@ -83,7 +82,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-**6. Set up the TypeScript SDK:**
+**TypeScript SDK:**
 
 ```bash
 cd sdk/typescript
@@ -92,7 +91,7 @@ npx tsc --noEmit
 npx jest
 ```
 
-**7. Set up the Go SDK:**
+**Go SDK:**
 
 ```bash
 cd sdk/go
@@ -102,160 +101,118 @@ go test -race ./...
 
 ---
 
-## 3. Language-Specific Guidelines
+## 4. Code standards
 
-### Rust (Core, Gateway, CLI, Storage Adapters)
+### Rust
 
-**Formatting.** Code must pass `cargo fmt --all`. No exceptions. Configure your editor to format on save.
+- Format: `cargo fmt --all` must pass with no diff.
+- Lint: `cargo clippy --all-targets --all-features -- -D warnings` — zero warnings.
+- `unsafe` is only allowed in the `ffi` module, gated behind the `ffi` feature flag, with a doc comment explaining the safety contract.
+- All public APIs need rustdoc comments. Non-trivial functions should include a `# Examples` doctest.
+- New public API needs tests: at minimum a happy path, an invalid-signature case, and a scope-escalation case.
+- New features must be gated behind a feature flag and compile cleanly with and without it.
+- Don't allocate in the hot authorization path. Run `cargo bench` before and after if you touch `NarrowingMatrix` or `DyoloChain::authorize`.
 
-**Linting.** Code must pass `cargo clippy --all-targets --all-features -- -D warnings`. Zero warnings allowed. Every new warning introduced by your change must be fixed, not `#[allow(...)]`'d, unless there is an explicit technical reason.
+### TypeScript
 
-**Safety.** `#![deny(unsafe_code)]` is strictly enforced globally. The only permitted use of `unsafe` is in the `ffi` module, which must:
-- Isolate all `unsafe` blocks with explicit safety contracts in doc comments.
-- Be gated behind the `ffi` feature flag.
-- Not introduce any `unsafe` in non-FFI code paths.
+- `strict: true` is enforced. No `any` — use `unknown` with a type guard where the type is genuinely dynamic.
+- Must pass `npx tsc --noEmit` clean.
+- New public API exported from `src/index.ts`. Integration tools from `src/integrations.ts`.
+- Code must work with both ESM and CJS builds.
 
-**Documentation.** All public APIs must have `rustdoc` comments. All non-trivial public functions must include embedded `# Examples` doctests. Internal functions should have `//` comments explaining non-obvious logic.
+### Python
 
-**Testing.** New public API surface must be covered by tests in `tests/integration.rs` or a module-level `#[cfg(test)]` block. Cryptographic paths must include at minimum: a happy-path test, an invalid-signature test, and a scope-escalation test.
+- Must pass `mypy --strict`.
+- Format with `black`, lint with `ruff check`.
+- All parameters and return values must be typed.
+- All network operations must be `async`. Sync wrappers are fine but must not block the event loop.
+- `httpx` is the only required dependency. Everything else must be an optional extra in `pyproject.toml`.
+- Python 3.9+ support required.
 
-**Feature flags.** New features must be gated behind an appropriate feature flag. Feature-gated code must compile cleanly both with and without the flag.
+### Go
 
-**Performance.** Operations in the hot authorization path must not allocate. Profile with `cargo bench` before and after changes that touch `NarrowingMatrix`, `DyoloChain::authorize`, or `authorize_batch`.
-
-### TypeScript SDK (`sdk/typescript`)
-
-**Types.** Strict mode is enabled (`"strict": true` in `tsconfig.json`). `any` types are not allowed; use `unknown` with a type guard when the type is genuinely unknown at compile time.
-
-**Compilation.** Must pass `npx tsc --noEmit` without errors or warnings.
-
-**Testing.** Run `npx jest`. Coverage must remain at 100% for cryptographic verification paths (passport parsing, chain validation, signature checks). Framework integration wrappers require at minimum a happy-path test and an error-propagation test.
-
-**Exports.** New public API must be exported from `src/index.ts`. New integration tools must be exported from `src/integrations.ts`. Do not create new top-level export files without discussion.
-
-**ESM + CJS.** The SDK publishes both ESM and CJS builds. All new code must compile cleanly with both `tsconfig.esm.json` and `tsconfig.cjs.json`. Do not use constructs that only work in one module system.
-
-### Python SDK (`sdk/python`)
-
-**Typing.** Must pass `mypy --strict`. The `py.typed` marker ensures enterprise consumers can validate their integrations statically. Every function parameter and return value must be annotated. Use `from __future__ import annotations` where needed for forward references.
-
-**Formatting.** Code must be formatted with `black` and pass `ruff check`.
-
-**Testing.** Run `pytest`. All `client.py` methods, validation logic, and KMS integration paths must be fully covered. New framework integrations require: a test with a mock HTTP client (using `respx`), an async test for async paths, and a test for authorization failure handling.
-
-**Async.** All new network operations must be `async`. Synchronous wrappers may be provided for convenience but must not block the event loop.
-
-**Dependencies.** `httpx` is the only mandatory dependency. All other dependencies (framework integrations, KMS clients, SIEM exporters) must be optional extras in `pyproject.toml`. Never add a required dependency without discussion.
-
-**Python version support.** The SDK supports Python 3.9+. Do not use syntax or stdlib features unavailable in 3.9 without a version guard.
-
-### Go SDK (`sdk/go`)
-
-**Formatting.** Must pass `gofmt -l .` (no output means clean). Must pass `go vet ./...`.
-
-**Testing.** Run `go test -v ./...`. Race conditions must be tested via `go test -race ./...`.
-
-**Error handling.** Do not use `panic` in library code. Return errors explicitly. Error types must be exported and documented.
-
-**Generics.** The `WithPassport[T, R]` guard uses generics (Go 1.21+). New generic code must include type constraint documentation explaining the bounds.
-
-**Module path.** The module path is `github.com/dyologician/a1/sdk/go/a1`. All imports in examples and documentation must use this exact path.
+- Must pass `gofmt -l .` (no output) and `go vet ./...`.
+- No `panic` in library code. Return errors explicitly with exported error types.
+- Test with both `go test -v ./...` and `go test -race ./...`.
 
 ---
 
-## 4. Pull Request Standards
-
-We do not merge broken code. Your PR must satisfy the following checklist before requesting a review from the core team.
+## 5. Pull requests
 
 ### Before opening a PR
 
-- [ ] Your branch is rebased on the latest `main` (no merge commits).
-- [ ] All commits are logically separated and have meaningful messages (`fix: correct NarrowingMatrix bit ordering` not `fix stuff`).
-- [ ] You have run the full test suite locally for every language you modified.
-- [ ] You have added tests for every new behavior introduced.
-- [ ] You have updated documentation (README, CAPABILITIES.md, relevant wiki pages) for any user-visible changes.
-- [ ] If you changed a wire format, you have verified backward compatibility with a test using a fixture from the previous version.
+- [ ] Rebased on latest `main` — no merge commits.
+- [ ] Commits are logically separated with clear messages.
+- [ ] Full test suite passes locally for every language you touched.
+- [ ] Tests added for every new behavior.
+- [ ] Documentation updated for any user-visible change.
+- [ ] If you changed a wire format, there's a backward-compatibility test with a fixture from the previous version.
 
-### CI requirements
+### CI
 
-The GitHub Actions CI pipeline (`ci.yml`) must pass completely:
+All jobs must pass before a PR will be reviewed:
 
-| Job | What it checks |
+| Job | Checks |
 |---|---|
-| `rust` | `cargo fmt`, `cargo clippy -D warnings`, `cargo test --all-features` |
-| `python` | `pytest` (all tests) |
-| `typescript` | `tsc --noEmit`, `jest` |
-| `go` | `go test -v ./...` |
-
-A PR with any failing CI job will not be reviewed.
+| Rust | `cargo fmt`, `cargo clippy -D warnings`, `cargo test --all-features` |
+| Python | `pytest` |
+| TypeScript | `tsc --noEmit`, `jest` |
+| Go | `go test -v ./...` |
 
 ### Commit message format
 
-Use [Conventional Commits](https://www.conventionalcommits.org/):
+[Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
+<type>(<scope>): <short description>
 ```
 
-Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`, `security`.
+Types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `chore`, `security`
 
-Scopes: `core`, `gateway`, `cli`, `python`, `typescript`, `go`, `redis`, `pg`, `ffi`, `zk`, `did`.
+Scopes: `core`, `gateway`, `cli`, `python`, `typescript`, `go`, `redis`, `pg`, `ffi`, `zk`, `did`
 
 Examples:
+
 ```
 feat(core): add ML-DSA-65 hybrid signature support
-fix(gateway): correct rate limiter bucket refill calculation
+fix(gateway): correct rate limiter bucket refill
 docs(python): add LlamaIndex integration guide
 security(core): use subtle::ConstantTimeEq for nonce comparison
 ```
 
 ### Review process
 
-1. Open the PR with a description explaining the problem, the solution, and any tradeoffs.
-2. A core team member will review within 5 business days.
-3. Address all review comments. Re-request review after each round of changes.
-4. Once approved and CI is green, a maintainer will merge using squash-merge for single-commit PRs or merge-commit for multi-commit feature branches.
+- Open the PR with a description of the problem, the solution, and any tradeoffs.
+- A maintainer will review within 5 business days.
+- Address review comments and re-request review after each round.
+- Once approved and CI is green, a maintainer will merge.
 
 ---
 
-## 5. Security Contributions
+## 6. Security issues
 
-If you discover a security vulnerability, **do not open a public PR or Issue**. Follow the responsible disclosure process in [SECURITY.md](SECURITY.md).
+If you find a security vulnerability, **do not open a public issue or PR.**
 
-Security fixes follow an expedited process:
-1. Report via email to workwithdyolo@gmail.com.
-2. We develop a fix in a private fork.
-3. We coordinate a release date with you.
-4. We publish the fix, the CVE (if applicable), and a public acknowledgement.
-
-Security contributors are credited in CHANGELOG.md and SECURITY.md by default. Anonymity is available on request.
+Email **workwithdyolo@gmail.com** with details. We'll respond quickly, develop a fix in a private fork, and coordinate a release with you. Contributors are credited in CHANGELOG.md and SECURITY.md by default — let us know if you'd prefer to stay anonymous.
 
 ---
 
-## 6. Contributor License Agreement
+## 7. Contributor License Agreement
 
-By submitting a pull request to this repository, you agree that:
+By submitting a pull request, you confirm that:
 
-1. Your contribution is your original work (or you have the right to submit it).
-2. You grant the project maintainers a perpetual, worldwide, non-exclusive, royalty-free license to use, reproduce, modify, and distribute your contribution under the MIT OR Apache-2.0 license.
-3. You understand and agree that your contribution becomes part of the project and may be redistributed under the project's license.
-
-If you are contributing on behalf of an employer or under a work-made-for-hire arrangement, you represent that you have the authority to grant this license.
+1. The contribution is your original work, or you have the right to submit it.
+2. You grant the maintainers a perpetual, worldwide, non-exclusive, royalty-free license to use, reproduce, modify, and distribute your contribution under the MIT OR Apache-2.0 license.
+3. If you're contributing on behalf of an employer, you have the authority to grant this license.
 
 ---
 
-## 7. Code of Conduct
+## 8. Code of Conduct
 
-This project follows a simple standard: be professional, be constructive, and be respectful.
+Be professional and constructive. Harassment, personal attacks, and discriminatory behavior aren't tolerated in any project space.
 
-We will not tolerate harassment, personal attacks, or discriminatory behavior of any kind in any project space (GitHub Issues, Discussions, Pull Requests, code comments).
-
-Violations can be reported to workwithdyolo@gmail.com. Confirmed violations will result in removal from the project.
+Report issues to workwithdyolo@gmail.com.
 
 ---
 
-*Thank you for contributing to A1. Every line of code, documentation fix, and test you add makes the AI agent ecosystem more accountable and more secure.*
+*Every contribution — code, docs, tests, bug reports — makes A1 better. Thanks for being here.*
