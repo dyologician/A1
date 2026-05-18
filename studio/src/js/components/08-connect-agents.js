@@ -262,6 +262,8 @@ function InstallPanel({ agent, gwUrl, onInstalled }) {
           cur.done = true;
           cur.success = data.success;
           cur.message = data.message;
+          cur.manual = data.manual || false;
+          cur.install_cmd = data.install_cmd || '';
         }
         forceUpdate(n => n + 1);
         if (data.success && onInstalled) setTimeout(onInstalled, 1000);
@@ -306,8 +308,16 @@ function InstallPanel({ agent, gwUrl, onInstalled }) {
       style: { fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 1.6, maxHeight: 160, overflowY: 'auto', padding: '8px 10px', background: 'var(--b1)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' },
       ref: el => { if (el) el.scrollTop = el.scrollHeight; }
     }, job.logs.join('\n')),
-    // Retry
-    !job.running && !job.success && h('div', { style: { padding: '6px 10px', borderTop: '1px solid var(--b3)', background: 'var(--b2)' } },
+    // Manual install: show copy button instead of Retry
+    !job.running && job.manual && job.install_cmd && h('div', { style: { padding: '8px 10px', borderTop: '1px solid var(--b3)', background: 'var(--b2)', display: 'flex', flexDirection: 'column', gap: 6 } },
+      h('div', { style: { fontSize: 'var(--fxs)', color: 'var(--t2)', marginBottom: 2 } }, 'Run this in your terminal, then click Rescan:'),
+      h('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
+        h('code', { style: { fontFamily: 'var(--mono)', fontSize: 11, background: 'var(--b1)', padding: '4px 8px', borderRadius: 'var(--r)', flex: 1, wordBreak: 'break-all', border: '1px solid var(--b3)' } }, job.install_cmd),
+        h('button', { className: 'btn btn-p btn-sm', style: { fontSize: 'var(--fxs)', whiteSpace: 'nowrap' }, onClick: () => navigator.clipboard.writeText(job.install_cmd) }, '📋 Copy')
+      )
+    ),
+    // Retry (only for real failures, not manual installs)
+    !job.running && !job.success && !job.manual && h('div', { style: { padding: '6px 10px', borderTop: '1px solid var(--b3)', background: 'var(--b2)' } },
       h('button', { className: 'btn btn-sm', style: { fontSize: 'var(--fxs)' }, onClick: () => { dismiss(); startInstall(); } }, '↺ Retry')
     )
   );

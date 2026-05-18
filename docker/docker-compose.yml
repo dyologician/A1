@@ -46,8 +46,13 @@ services:
       # ── Observability ─────────────────────────────────────────────────────────
       RUST_LOG:               ${RUST_LOG:-a1_gateway=info,tower_http=info}
 
+      # ── Agent detection (host filesystem access) ──────────────────────────────
+      A1_HOST_HOME:           ${HOME:-}
+      A1_RUNNING_IN_DOCKER:   true
+
     volumes:
       - ../studio/index.html:/studio/index.html:ro
+      - ${HOME:-~}:/host-home:ro
     depends_on:
       redis:
         condition: service_healthy

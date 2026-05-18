@@ -180,6 +180,18 @@ pub struct ScanResponse {
 // ─── Helper: home directory ───────────────────────────────────────────────────
 
 fn home() -> PathBuf {
+    // When running inside Docker, the host home dir is mounted at /host-home
+    // so we can scan the user's actual filesystem for installed agents.
+    if std::env::var("A1_RUNNING_IN_DOCKER").is_ok() {
+        if let Ok(host_home) = std::env::var("A1_HOST_HOME") {
+            let p = PathBuf::from("/host-home");
+            if p.exists() {
+                return p;
+            }
+            // Fallback: use the host home path directly if /host-home not mounted yet
+            let _ = host_home;
+        }
+    }
     std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .map(PathBuf::from)
@@ -1122,6 +1134,33 @@ pub async fn pull_handler(
                 .data(serde_json::to_string(&json!({
                     "success": false,
                     "message": format!("No install command available for agent '{agent_id}'. Download manually from the homepage.")
+                })).unwrap_or_default())
+            )).await;
+            return;
+        }
+
+        // When running inside Docker, we can't install tools on the host machine.
+        // Instead, show the command for the user to run in their own terminal.
+        if std::env::var("A1_RUNNING_IN_DOCKER").is_ok() {
+            let _ = tx.send(Ok(Event::default()
+                .event("log")
+                .data(format!("⚠ A1 is running inside Docker and cannot install software on your computer directly."))
+            )).await;
+            let _ = tx.send(Ok(Event::default()
+                .event("log")
+                .data(format!("Open your terminal and run this command to install {}:", agent_id))
+            )).await;
+            let _ = tx.send(Ok(Event::default()
+                .event("log")
+                .data(format!("$ {install_cmd}"))
+            )).await;
+            let _ = tx.send(Ok(Event::default()
+                .event("done")
+                .data(serde_json::to_string(&json!({
+                    "success": false,
+                    "manual": true,
+                    "install_cmd": install_cmd,
+                    "message": format!("Copy the command above and run it in your terminal, then click Rescan.")
                 })).unwrap_or_default())
             )).await;
             return;
